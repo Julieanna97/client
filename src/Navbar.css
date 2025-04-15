@@ -1,0 +1,59 @@
+/* Navbar layout */
+.navbar {
+    background: white;
+    border-bottom: 1px solid #ddd;
+    padding: 16px;
+  }
+  
+  .navbar-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .navbar-links {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  /* Admin dropdown container */
+  .navbar-admin {
+    position: relative;
+  }
+  
+  .navbar-admin > span {
+    cursor: pointer;
+    padding: 8px;
+  }
+  
+  /* Dropdown styles */
+  .navbar-admin-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border: 1px solid #ddd;
+    flex-direction: column;
+    min-width: 160px;
+    z-index: 100;
+  }
+  
+  .navbar-admin-dropdown a {
+    padding: 10px;
+    text-decoration: none;
+    color: #333;
+    white-space: nowrap;
+  }
+  
+  .navbar-admin-dropdown a:hover {
+    background-color: #f0f0f0;
+  }
+  
+  /* Fix disappearing issue */
+  .navbar-admin:hover .navbar-admin-dropdown,
+  .navbar-admin-dropdown:hover {
+    display: flex;
+  }
+  
