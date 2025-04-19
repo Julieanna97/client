@@ -28,9 +28,6 @@ const SearchResults = () => {
       const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
       const cx = import.meta.env.VITE_GOOGLE_CX;
 
-      console.log("🔑 API Key:", import.meta.env.VITE_GOOGLE_API_KEY);
-      console.log("🔍 CX:", import.meta.env.VITE_GOOGLE_CX);
-
 
       if (!apiKey || !cx) {
         setError("Missing API credentials.");
