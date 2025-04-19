@@ -112,17 +112,17 @@ const Checkout = () => {
   };
 
   if (cart.length === 0) {
-    return <p className="text-center mt-8 text-gray-500">Your cart is empty.</p>;
+    return <p>Your cart is empty.</p>;
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Checkout</h1>
+      <h1>Checkout</h1>
 
       {/* Cart Summary */}
-      <h2 className="text-xl font-semibold mb-4">Your Cart</h2>
+      <h2>Your Cart</h2>
       {cart.map((item) => (
-        <div key={item.id} className="flex items-center justify-between mb-4 border-b pb-2">
+        <div key={item.id}>
           <div>
             <h3 className="font-semibold">{item.name}</h3>
             <p>${item.price} x {item.quantity}</p>
@@ -133,11 +133,9 @@ const Checkout = () => {
               value={item.quantity}
               min="1"
               onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
-              className="w-16 border rounded p-1 text-center"
             />
             <button
               onClick={() => removeItem(item.id)}
-              className="text-red-500 hover:underline"
             >
               Remove
             </button>
@@ -146,18 +144,17 @@ const Checkout = () => {
       ))}
 
       {/* Customer Form */}
-      <h2 className="text-xl font-semibold mt-8 mb-4">Customer Information</h2>
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+      <h2>Customer Information</h2>
+      <form onSubmit={handleSubmit}>
         {Object.entries(customerInfo).map(([key, value]) => (
           <div key={key}>
-            <label className="block font-medium capitalize mb-1">{key.replace("_", " ")}:</label>
+            <label>{key.replace("_", " ")}:</label>
             <input
               type="text"
               name={key}
               value={String(value)}
               onChange={handleInputChange}
               required
-              className="w-full p-2 border rounded"
             />
           </div>
         ))}

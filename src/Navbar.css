@@ -51,7 +51,6 @@
     background-color: #f0f0f0;
   }
   
-  /* Fix disappearing issue */
   .navbar-admin:hover .navbar-admin-dropdown,
   .navbar-admin-dropdown:hover {
     display: flex;

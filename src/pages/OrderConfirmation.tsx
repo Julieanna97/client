@@ -74,11 +74,11 @@ const OrderConfirmation = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Thank you for your purchase!</h1>
-      <p className="mb-6">Your order has been received and is being processed.</p>
+      <h1>Thank you for your purchase!</h1>
+      <p>Your order has been received and is being processed.</p>
 
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-2">Customer Information</h2>
+      <div>
+        <h2>Customer Information</h2>
         <p><strong>Name:</strong> {order.customer_firstname} {order.customer_lastname}</p>
         <p><strong>Email:</strong> {order.customer_email}</p>
         <p><strong>Phone:</strong> {order.customer_phone}</p>
@@ -86,15 +86,15 @@ const OrderConfirmation = () => {
       </div>
 
       <div>
-        <h2 className="text-xl font-semibold mb-2">Order Summary</h2>
-        <ul className="space-y-2">
+        <h2>Order Summary</h2>
+        <ul>
           {order.order_items.map((item) => (
             <li key={item.id} className="border-b pb-2">
               {item.product_name} x {item.quantity} — ${item.unit_price * item.quantity}
             </li>
           ))}
         </ul>
-        <p className="mt-4 text-lg font-bold">Total: ${order.total_price}</p>
+        <p>Total: ${order.total_price}</p>
       </div>
     </div>
   );

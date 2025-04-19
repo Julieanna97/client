@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import "../Products.css"
 
 interface Product {
   id: number;
@@ -57,29 +58,27 @@ const Product = () => {
   if (!product) return null;
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
+    <div>
+      <h1>{product.name}</h1>
       <img
         src={product.image}
         alt={product.name}
-        className="w-full max-h-96 object-cover rounded mb-4"
+        className="product-image"
       />
-      <p className="text-gray-600 mb-2">{product.description}</p>
-      <p className="text-lg font-semibold mb-2">Category: {product.category}</p>
-      <p className="text-xl font-bold mb-4">${product.price}</p>
-      <label className="block mb-2 font-medium">Quantity:</label>
+      <p>{product.description}</p>
+      <p>Category: {product.category}</p>
+      <p>${product.price}</p>
+      <label>Quantity:</label>
       <input
         type="number"
         min="1"
         max={product.stock}
         value={quantity}
         onChange={(e) => setQuantity(parseInt(e.target.value))}
-        className="p-2 border rounded w-24 text-center mb-4"
       />
       <br />
       <button
         onClick={addToCart}
-        className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
       >
         Add to Cart
       </button>

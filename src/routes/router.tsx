@@ -20,6 +20,7 @@ import ManageOrders from "../pages/admin/ManageOrders";
 import OrderDetails from "../pages/admin/OrderDetails";
 import OrderConfirmation from "../pages/OrderConfirmation";
 import Checkout from "../pages/Checkout";
+import SearchResults from "../pages/SearchResults";
 
 const router = createBrowserRouter([
   {
@@ -33,6 +34,7 @@ const router = createBrowserRouter([
       { path: "cart", element: <Cart /> },
       { path: "checkout", element: <Checkout /> },
       { path: "order-confirmation", element: <OrderConfirmation /> },
+      { path: "search", element: <SearchResults /> },
       
 
       // Admin
