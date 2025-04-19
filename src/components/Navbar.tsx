@@ -15,6 +15,10 @@ const Navbar = () => {
     }
   };
 
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -27,7 +31,7 @@ const Navbar = () => {
             type="text"
             placeholder="Search products"
             value={searchTerm}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+            onChange={handleInputChange}
           />
           <button type="submit">Search</button>
         </form>
