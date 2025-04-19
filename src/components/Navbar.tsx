@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, FormEvent, ChangeEvent } from "react";
 import "../Navbar.css";
 
 const Navbar = () => {
@@ -7,7 +7,7 @@ const Navbar = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (searchTerm.length > 2) {
       navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
@@ -27,7 +27,7 @@ const Navbar = () => {
             type="text"
             placeholder="Search products"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
           />
           <button type="submit">Search</button>
         </form>
