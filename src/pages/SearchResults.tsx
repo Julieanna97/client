@@ -28,7 +28,6 @@ const SearchResults = () => {
       const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
       const cx = import.meta.env.VITE_GOOGLE_CX;
 
-
       if (!apiKey || !cx) {
         setError("Missing API credentials.");
         return;
@@ -44,7 +43,7 @@ const SearchResults = () => {
           axios.get("https://www.googleapis.com/customsearch/v1", {
             params: { key: apiKey, cx, q: query },
           }),
-          axios.get("https://ecommerce-api-new-two.vercel.app/products"), // ✅ Your API for products
+          axios.get("https://ecommerce-api-new-two.vercel.app/products"),
         ]);
 
         setResults(googleRes.data.items || []);
@@ -65,12 +64,12 @@ const SearchResults = () => {
   };
 
   return (
-    <div>
-      <h1>Search Results for: "{query}"</h1>
-      {error && <p>{error}</p>}
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Search Results for: "{query}"</h1>
+      {error && <p className="text-red-500">{error}</p>}
       {results.length === 0 && !error && <p>No results found.</p>}
 
-      <div>
+      <div className="grid gap-4">
         {results.map((item, i) => {
           const matchedProduct = matchToLocalProduct(item.title);
           return (
@@ -79,29 +78,29 @@ const SearchResults = () => {
                 <img
                   src={item.pagemap.cse_thumbnail[0].src}
                   alt={item.title}
+                  className="w-32 h-32 object-cover mb-2"
                 />
               ) : (
                 <img
                   src="/no-image.png"
                   alt="No thumbnail"
+                  className="w-32 h-32 object-cover mb-2"
                 />
               )}
-              <h2>{item.title}</h2>
-              <p>{item.snippet}</p>
+              <h2 className="text-lg font-semibold">{item.title}</h2>
+              <p className="text-sm text-gray-700">{item.snippet}</p>
+
               {matchedProduct ? (
                 <Link
                   to={`/product/${matchedProduct.id}`}
+                  className="text-blue-500 underline mt-2 inline-block"
                 >
                   View on Your Shop →
                 </Link>
               ) : (
-                <a
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View External →
-                </a>
+                <span className="text-gray-400 italic mt-2 inline-block cursor-not-allowed">
+                  External link disabled
+                </span>
               )}
             </div>
           );
