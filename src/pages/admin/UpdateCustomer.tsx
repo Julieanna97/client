@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../../lib/api";
 
 const UpdateCustomer = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -14,15 +16,28 @@ const UpdateCustomer = () => {
     street_address: "",
     postal_code: "",
     city: "",
-    country: ""
+    country: "",
   });
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCustomer = async () => {
       try {
-        const res = await axios.get(`https://ecommerce-api-new-two.vercel.app/customers/${id}`);
-        setFormData(res.data);
+        const res = await axios.get(`${API_BASE_URL}/customers/${id}`);
+
+        setFormData({
+          firstname: res.data.firstname || "",
+          lastname: res.data.lastname || "",
+          email: res.data.email || "",
+          password: res.data.password || "",
+          phone: res.data.phone || "",
+          street_address: res.data.street_address || "",
+          postal_code: res.data.postal_code || "",
+          city: res.data.city || "",
+          country: res.data.country || "",
+        });
+
         setLoading(false);
       } catch (err) {
         console.error("Failed to fetch customer", err);
@@ -37,14 +52,16 @@ const UpdateCustomer = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     try {
-      await axios.patch(`https://ecommerce-api-new-two.vercel.app/customers/${id}`, formData);
+      await axios.patch(`${API_BASE_URL}/customers/${id}`, formData);
+
       alert("Customer updated!");
       navigate("/admin/customers");
     } catch (err) {
@@ -58,10 +75,12 @@ const UpdateCustomer = () => {
   return (
     <div className="container">
       <h1>Update Customer</h1>
+
       <form onSubmit={handleSubmit}>
         {Object.entries(formData).map(([key, value]) => (
           <div key={key}>
             <label>{key.replace("_", " ")}:</label>
+
             <input
               type={key === "password" ? "password" : "text"}
               name={key}
@@ -71,6 +90,7 @@ const UpdateCustomer = () => {
             />
           </div>
         ))}
+
         <button type="submit">Update</button>
       </form>
     </div>

@@ -1,41 +1,57 @@
 import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
-import "../Products.css" //
+import "../Products.css";
+import { API_BASE_URL } from "../lib/api";
 
 interface Product {
   id: number;
   name: string;
   description: string;
-  price: number;
+  price: number | string;
   stock: number;
   image: string;
+  category: string;
 }
 
-const Products = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+const Product = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const fetchProducts = async () => {
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [quantity, setQuantity] = useState(1);
+
+  const fetchProduct = async () => {
     try {
-      const res = await axios.get("https://ecommerce-api-new-two.vercel.app/products");
-      setProducts(res.data);
+      const res = await axios.get(`${API_BASE_URL}/products/${id}`);
+      setProduct(res.data);
     } catch (err) {
-      console.error("Failed to fetch products", err);
+      console.error("Failed to fetch product", err);
+      alert("Product not found.");
+      navigate("/products");
     } finally {
       setLoading(false);
     }
   };
 
-  const addToCart = (product: Product) => {
+  useEffect(() => {
+    fetchProduct();
+  }, [id]);
+
+  const addToCart = () => {
+    if (!product) return;
+
     const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    const existing = cart.find((item: any) => item.id === product.id);
+
+    const existing = cart.find(
+      (item: Product & { quantity: number }) => item.id === product.id
+    );
 
     if (existing) {
-      existing.quantity += 1;
+      existing.quantity += quantity;
     } else {
-      cart.push({ ...product, quantity: 1 });
+      cart.push({ ...product, quantity });
     }
 
     localStorage.setItem("cart", JSON.stringify(cart));
@@ -43,53 +59,40 @@ const Products = () => {
     navigate("/cart");
   };
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  if (loading) return <p>Loading products...</p>;
+  if (loading) return <p>Loading product...</p>;
+  if (!product) return null;
 
   return (
-    <div className="products-page">
-      <h1 className="products-title">Shop Products</h1>
-      <div className="products-grid">
-        {products.map((product) => (
-          <div key={product.id} className="product-card">
-            <img
-              src={product.image}
-              alt={product.name}
-              className="product-image"
-            />
-            <h2 className="product-name">{product.name}</h2>
-            <p className="product-description">
-              {product.description.slice(0, 60)}...
-            </p>
-            <p className="product-price">${product.price}</p>
-            <p className="product-stock">Stock: {product.stock}</p>
+    <div className="product-detail-page">
+      <h1>{product.name}</h1>
 
-            <div className="product-actions">
-              <Link to={`/product/${product.id}`} className="button-secondary">
-                View Details
-              </Link>
+      <img
+        src={product.image}
+        alt={product.name}
+        className="product-image"
+      />
 
-              <button
-                onClick={() => addToCart(product)}
-                disabled={product.stock <= 0}
-                className={`button-primary ${
-                  product.stock <= 0 ? "button-disabled" : ""
-                }`}
-              >
-                {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
-              </button>
-            </div>
-          </div>
-        ))}
-        {products.length === 0 && (
-          <p className="no-products">No products available.</p>
-        )}
-      </div>
+      <p>{product.description}</p>
+      <p>Category: {product.category}</p>
+      <p>{product.price} SEK</p>
+      <p>Stock: {product.stock}</p>
+
+      <label>Quantity:</label>
+      <input
+        type="number"
+        min="1"
+        max={product.stock}
+        value={quantity}
+        onChange={(e) => setQuantity(Number(e.target.value))}
+      />
+
+      <br />
+
+      <button onClick={addToCart} disabled={product.stock <= 0}>
+        {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
+      </button>
     </div>
   );
 };
 
-export default Products;
+export default Product;

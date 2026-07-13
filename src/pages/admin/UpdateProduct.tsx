@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../../lib/api";
 
 const UpdateProduct = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -18,8 +21,19 @@ const UpdateProduct = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`https://ecommerce-api-new-two.vercel.app/products/${id}`);
-        setFormData(res.data);
+        const res = await axios.get(`${API_BASE_URL}/products/${id}`);
+
+        const { name, description, price, stock, category, image } = res.data;
+
+        setFormData({
+          name: name || "",
+          description: description || "",
+          price: Number(price) || 0,
+          stock: Number(stock) || 0,
+          category: category || "",
+          image: image || "",
+        });
+
         setLoading(false);
       } catch (err) {
         console.error("Failed to fetch product", err);
@@ -31,8 +45,11 @@ const UpdateProduct = () => {
     fetchProduct();
   }, [id, navigate]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
+
     setFormData({
       ...formData,
       [name]: name === "price" || name === "stock" ? Number(value) : value,
@@ -41,12 +58,14 @@ const UpdateProduct = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     try {
-      await axios.patch(`https://ecommerce-api-new-two.vercel.app/products/${id}`, formData);
+      await axios.patch(`${API_BASE_URL}/products/${id}`, formData);
+
       alert("Product updated!");
       navigate("/admin/products");
     } catch (err) {
-      console.error("Failed to update product", err);
+      console.error("Update failed:", err);
       alert("Error updating product.");
     }
   };
@@ -56,9 +75,11 @@ const UpdateProduct = () => {
   return (
     <div className="container">
       <h1>Update Product</h1>
+
       <form onSubmit={handleSubmit}>
         <div>
           <label>Name:</label>
+
           <input
             type="text"
             name="name"
@@ -70,6 +91,7 @@ const UpdateProduct = () => {
 
         <div>
           <label>Description:</label>
+
           <textarea
             name="description"
             required
@@ -80,6 +102,7 @@ const UpdateProduct = () => {
 
         <div>
           <label>Price:</label>
+
           <input
             type="number"
             name="price"
@@ -91,6 +114,7 @@ const UpdateProduct = () => {
 
         <div>
           <label>Stock:</label>
+
           <input
             type="number"
             name="stock"
@@ -102,6 +126,7 @@ const UpdateProduct = () => {
 
         <div>
           <label>Category:</label>
+
           <input
             type="text"
             name="category"
@@ -113,6 +138,7 @@ const UpdateProduct = () => {
 
         <div>
           <label>Image URL:</label>
+
           <input
             type="text"
             name="image"

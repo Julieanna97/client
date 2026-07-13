@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from "../../lib/api";
 
 interface Product {
   id: number;
   name: string;
   category: string;
-  price: number;
+  price: number | string;
   stock: number;
 }
 
@@ -16,7 +17,7 @@ const ManageProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("https://ecommerce-api-new-two.vercel.app/products");
+      const res = await axios.get(`${API_BASE_URL}/products`);
       setProducts(res.data);
     } catch (err) {
       console.error("Failed to fetch products", err);
@@ -26,12 +27,17 @@ const ManageProducts = () => {
   };
 
   const deleteProduct = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this product?")) return;
+    if (!window.confirm("Are you sure you want to delete this product?")) {
+      return;
+    }
+
     try {
-      await axios.delete(`https://ecommerce-api-new-two.vercel.app/products/${id}`);
-      setProducts(products.filter((p) => p.id !== id));
+      await axios.delete(`${API_BASE_URL}/products/${id}`);
+
+      setProducts(products.filter((product) => product.id !== id));
     } catch (err) {
       console.error("Failed to delete product", err);
+      alert("Error deleting product.");
     }
   };
 
@@ -44,7 +50,10 @@ const ManageProducts = () => {
   return (
     <div className="container">
       <h1>Manage Products</h1>
-      <Link to="/admin/products/create" className="link-button">+ Create Product</Link>
+
+      <Link to="/admin/products/create" className="link-button">
+        + Create Product
+      </Link>
 
       {products.length === 0 ? (
         <p>No products found.</p>
@@ -59,16 +68,26 @@ const ManageProducts = () => {
               <th>Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {products.map((product) => (
               <tr key={product.id}>
                 <td>{product.name}</td>
                 <td>{product.category}</td>
-                <td>${product.price}</td>
+                <td>{Number(product.price).toFixed(2)} SEK</td>
                 <td>{product.stock}</td>
+
                 <td className="actions">
-                  <Link to={`/admin/products/update/${product.id}`} className="link-button">Edit</Link>
-                  <button onClick={() => deleteProduct(product.id)}>Delete</button>
+                  <Link
+                    to={`/admin/products/update/${product.id}`}
+                    className="link-button"
+                  >
+                    Edit
+                  </Link>
+
+                  <button onClick={() => deleteProduct(product.id)}>
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}

@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../lib/api";
 
 interface OrderItem {
   id: number;
   product_name: string;
   quantity: number;
-  unit_price: number;
+  unit_price: number | string;
 }
 
 interface Order {
@@ -19,7 +20,7 @@ interface Order {
   customer_postal_code: string;
   customer_city: string;
   customer_country: string;
-  total_price: number;
+  total_price: number | string;
   payment_status: string;
   order_status: string;
   order_items: OrderItem[];
@@ -28,6 +29,7 @@ interface Order {
 const OrderConfirmation = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -42,11 +44,13 @@ const OrderConfirmation = () => {
 
     const fetchOrder = async () => {
       try {
-        const response = await axios.get(`https://ecommerce-api-new-two.vercel.app/orders/payment/${sessionId}`);
-        const orderData = response.data;
+        const response = await axios.get(
+          `${API_BASE_URL}/orders/payment/${sessionId}`
+        );
 
-        // Update order status to Paid / Received
-        await axios.patch(`https://ecommerce-api-new-two.vercel.app/orders/${orderData.id}`, {
+        const orderData: Order = response.data;
+
+        await axios.patch(`${API_BASE_URL}/orders/${orderData.id}`, {
           payment_status: "Paid",
           order_status: "Received",
           payment_id: sessionId,
@@ -54,7 +58,6 @@ const OrderConfirmation = () => {
 
         setOrder(orderData);
 
-        // Clear localStorage
         localStorage.removeItem("cart");
         localStorage.removeItem("customerInfo");
       } catch (error) {
@@ -79,22 +82,40 @@ const OrderConfirmation = () => {
 
       <div>
         <h2>Customer Information</h2>
-        <p><strong>Name:</strong> {order.customer_firstname} {order.customer_lastname}</p>
-        <p><strong>Email:</strong> {order.customer_email}</p>
-        <p><strong>Phone:</strong> {order.customer_phone}</p>
-        <p><strong>Address:</strong> {order.customer_street_address}, {order.customer_postal_code} {order.customer_city}, {order.customer_country}</p>
+
+        <p>
+          <strong>Name:</strong> {order.customer_firstname}{" "}
+          {order.customer_lastname}
+        </p>
+
+        <p>
+          <strong>Email:</strong> {order.customer_email}
+        </p>
+
+        <p>
+          <strong>Phone:</strong> {order.customer_phone}
+        </p>
+
+        <p>
+          <strong>Address:</strong> {order.customer_street_address},{" "}
+          {order.customer_postal_code} {order.customer_city},{" "}
+          {order.customer_country}
+        </p>
       </div>
 
       <div>
         <h2>Order Summary</h2>
+
         <ul>
           {order.order_items.map((item) => (
             <li key={item.id} className="border-b pb-2">
-              {item.product_name} x {item.quantity} — ${item.unit_price * item.quantity}
+              {item.product_name} x {item.quantity} —{" "}
+              {(Number(item.unit_price) * item.quantity).toFixed(2)} SEK
             </li>
           ))}
         </ul>
-        <p>Total: ${order.total_price}</p>
+
+        <p>Total: {Number(order.total_price).toFixed(2)} SEK</p>
       </div>
     </div>
   );

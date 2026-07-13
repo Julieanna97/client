@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../../lib/api";
 
 const CreateProduct = () => {
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -13,8 +15,11 @@ const CreateProduct = () => {
     image: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
+
     setFormData({
       ...formData,
       [name]: name === "price" || name === "stock" ? Number(value) : value,
@@ -23,8 +28,10 @@ const CreateProduct = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     try {
-      await axios.post("https://ecommerce-api-new-two.vercel.app/products", formData);
+      await axios.post(`${API_BASE_URL}/products`, formData);
+
       alert("Product created!");
       navigate("/admin/products");
     } catch (err) {
@@ -36,6 +43,7 @@ const CreateProduct = () => {
   return (
     <div className="container">
       <h1>Create Product</h1>
+
       <form onSubmit={handleSubmit}>
         <div>
           <label>Name:</label>

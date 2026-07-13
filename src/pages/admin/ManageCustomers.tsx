@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from "../../lib/api";
 
 interface Customer {
   id: number;
@@ -18,7 +19,7 @@ const ManageCustomers = () => {
 
   const fetchCustomers = async () => {
     try {
-      const res = await axios.get("https://ecommerce-api-new-two.vercel.app/customers");
+      const res = await axios.get(`${API_BASE_URL}/customers`);
       setCustomers(res.data);
     } catch (err) {
       console.error("Failed to fetch customers", err);
@@ -28,12 +29,17 @@ const ManageCustomers = () => {
   };
 
   const deleteCustomer = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this customer?")) return;
+    if (!window.confirm("Are you sure you want to delete this customer?")) {
+      return;
+    }
+
     try {
-      await axios.delete(`https://ecommerce-api-new-two.vercel.app/customers/${id}`);
-      setCustomers(customers.filter((c) => c.id !== id));
+      await axios.delete(`${API_BASE_URL}/customers/${id}`);
+
+      setCustomers(customers.filter((customer) => customer.id !== id));
     } catch (err) {
       console.error("Failed to delete customer", err);
+      alert("Error deleting customer.");
     }
   };
 
@@ -46,7 +52,10 @@ const ManageCustomers = () => {
   return (
     <div className="container">
       <h1>Manage Customers</h1>
-      <Link to="/admin/customers/create" className="link-button">+ Create Customer</Link>
+
+      <Link to="/admin/customers/create" className="link-button">
+        + Create Customer
+      </Link>
 
       {customers.length === 0 ? (
         <p>No customers found.</p>
@@ -62,17 +71,28 @@ const ManageCustomers = () => {
               <th>Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {customers.map((customer) => (
               <tr key={customer.id}>
-                <td>{customer.firstname} {customer.lastname}</td>
+                <td>
+                  {customer.firstname} {customer.lastname}
+                </td>
                 <td>{customer.email}</td>
                 <td>{customer.phone}</td>
                 <td>{customer.city}</td>
                 <td>{customer.country}</td>
                 <td className="actions">
-                  <Link to={`/admin/customers/update/${customer.id}`} className="link-button">Edit</Link>
-                  <button onClick={() => deleteCustomer(customer.id)}>Delete</button>
+                  <Link
+                    to={`/admin/customers/update/${customer.id}`}
+                    className="link-button"
+                  >
+                    Edit
+                  </Link>
+
+                  <button onClick={() => deleteCustomer(customer.id)}>
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}

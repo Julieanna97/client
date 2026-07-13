@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../../lib/api";
 
 const CreateCustomer = () => {
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -13,13 +15,13 @@ const CreateCustomer = () => {
     street_address: "",
     postal_code: "",
     city: "",
-    country: ""
+    country: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -27,7 +29,8 @@ const CreateCustomer = () => {
     e.preventDefault();
 
     try {
-      await axios.post("https://ecommerce-api-new-two.vercel.app/customers", formData);
+      await axios.post(`${API_BASE_URL}/customers`, formData);
+
       alert("Customer created!");
       navigate("/admin/customers");
     } catch (err) {
@@ -39,10 +42,12 @@ const CreateCustomer = () => {
   return (
     <div className="container">
       <h1>Create Customer</h1>
+
       <form onSubmit={handleSubmit}>
         {Object.entries(formData).map(([key, value]) => (
           <div key={key}>
             <label>{key.replace("_", " ")}:</label>
+
             <input
               type={key === "password" ? "password" : "text"}
               name={key}
@@ -52,6 +57,7 @@ const CreateCustomer = () => {
             />
           </div>
         ))}
+
         <button type="submit">Create</button>
       </form>
     </div>

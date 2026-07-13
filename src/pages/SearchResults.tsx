@@ -1,6 +1,7 @@
 import { useSearchParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../lib/api";
 
 interface SearchItem {
   title: string;
@@ -19,17 +20,23 @@ interface Product {
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
+
   const [results, setResults] = useState<SearchItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [error, setError] = useState("");
+  const [localProductWarning, setLocalProductWarning] = useState("");
 
   useEffect(() => {
     const fetchResults = async () => {
       const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
       const cx = import.meta.env.VITE_GOOGLE_CX;
 
+      setError("");
+      setLocalProductWarning("");
+      setResults([]);
+
       if (!apiKey || !cx) {
-        setError("Missing API credentials.");
+        setError("Missing Google Custom Search API credentials.");
         return;
       }
 
@@ -39,18 +46,33 @@ const SearchResults = () => {
       }
 
       try {
-        const [googleRes, localRes] = await Promise.all([
-          axios.get("https://www.googleapis.com/customsearch/v1", {
-            params: { key: apiKey, cx, q: query },
-          }),
-          axios.get("https://ecommerce-api-new-two.vercel.app/products"),
-        ]);
+        const googleRes = await axios.get(
+          "https://www.googleapis.com/customsearch/v1",
+          {
+            params: {
+              key: apiKey,
+              cx,
+              q: query,
+            },
+          }
+        );
 
         setResults(googleRes.data.items || []);
+      } catch (err) {
+        console.error("Google search error:", err);
+        setError(
+          "Could not fetch external search results. Check your Google API key, search engine ID, or API restrictions."
+        );
+      }
+
+      try {
+        const localRes = await axios.get(`${API_BASE_URL}/products`);
         setProducts(localRes.data || []);
       } catch (err) {
-        console.error("❌ Search error:", err);
-        setError("Failed to fetch search results.");
+        console.error("Local products error:", err);
+        setLocalProductWarning(
+          "Local shop products could not be loaded, but external search can still work."
+        );
       }
     };
 
@@ -65,13 +87,22 @@ const SearchResults = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Search Results for: "{query}"</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        Search Results for: "{query}"
+      </h1>
+
       {error && <p className="text-red-500">{error}</p>}
+
+      {localProductWarning && (
+        <p className="text-gray-500">{localProductWarning}</p>
+      )}
+
       {results.length === 0 && !error && <p>No results found.</p>}
 
       <div className="grid gap-4">
         {results.map((item, i) => {
           const matchedProduct = matchToLocalProduct(item.title);
+
           return (
             <div key={i} className="border p-4 rounded shadow">
               {item.pagemap?.cse_thumbnail ? (
@@ -87,21 +118,30 @@ const SearchResults = () => {
                   className="w-32 h-32 object-cover mb-2"
                 />
               )}
+
               <h2 className="text-lg font-semibold">{item.title}</h2>
+
               <p className="text-sm text-gray-700">{item.snippet}</p>
 
-              {matchedProduct ? (
-                <Link
-                  to={`/product/${matchedProduct.id}`}
-                  className="text-blue-500 underline mt-2 inline-block"
+              <div className="mt-2">
+                {matchedProduct && (
+                  <Link
+                    to={`/product/${matchedProduct.id}`}
+                    className="text-blue-500 underline inline-block mr-4"
+                  >
+                    View on Your Shop →
+                  </Link>
+                )}
+
+                <a
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline inline-block"
                 >
-                  View on Your Shop →
-                </Link>
-              ) : (
-                <span className="text-gray-400 italic mt-2 inline-block cursor-not-allowed">
-                  External link disabled
-                </span>
-              )}
+                  Open external result ↗
+                </a>
+              </div>
             </div>
           );
         })}
