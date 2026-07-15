@@ -21,6 +21,8 @@ import OrderDetails from "../pages/admin/OrderDetails";
 import OrderConfirmation from "../pages/OrderConfirmation";
 import Checkout from "../pages/Checkout";
 import SearchResults from "../pages/SearchResults";
+import GoogleSearchDebug from "../pages/GoogleSearchDebug";
+import SearchImportHelper from "../pages/SearchImportHelper";
 
 const router = createBrowserRouter([
   {
@@ -35,6 +37,14 @@ const router = createBrowserRouter([
       { path: "checkout", element: <Checkout /> },
       { path: "order-confirmation", element: <OrderConfirmation /> },
       { path: "search", element: <SearchResults /> },
+      {
+        path: "search-debug",
+        element: <GoogleSearchDebug />,
+      },
+      {
+        path: "search-import",
+        element: <SearchImportHelper />,
+      },
       
 
       // Admin

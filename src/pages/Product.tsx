@@ -12,6 +12,7 @@ interface Product {
   stock: number;
   image: string;
   category: string;
+  external_url?: string | null;
 }
 
 interface CartItem extends Product {
@@ -69,14 +70,16 @@ const Product = () => {
   if (!product) return null;
 
   return (
-    <div>
+    <div className="product-detail-page">
       <h1>{product.name}</h1>
 
-      <img src={product.image} alt={product.name} className="product-image" />
+      {product.image && (
+        <img src={product.image} alt={product.name} className="product-image" />
+      )}
 
       <p>{product.description}</p>
       <p>Category: {product.category}</p>
-      <p>{product.price} SEK</p>
+      <p>{Number(product.price).toFixed(2)} SEK</p>
       <p>Stock: {product.stock}</p>
 
       <label>Quantity:</label>

@@ -1,4 +1,17 @@
 /* Global reset and fonts */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  height: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 body {
   font-family: Arial, sans-serif;
   background-color: #f4f6f8;
@@ -8,7 +21,7 @@ body {
 }
 
 a {
-  color: #007BFF;
+  color: #007bff;
   text-decoration: none;
 }
 
@@ -19,6 +32,7 @@ a:hover {
 /* Container */
 .container {
   max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   padding: 20px;
 }
@@ -42,7 +56,8 @@ table {
   background: white;
 }
 
-th, td {
+th,
+td {
   border: 1px solid #ddd;
   padding: 12px;
   text-align: left;
@@ -61,8 +76,7 @@ form {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  max-width: 600px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 form div {
@@ -75,7 +89,9 @@ label {
   font-weight: bold;
 }
 
-input, textarea, select {
+input,
+textarea,
+select {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #ccc;
@@ -83,13 +99,14 @@ input, textarea, select {
 }
 
 button {
-  background-color: #007BFF;
+  background-color: #007bff;
   color: white;
   border: none;
   padding: 10px 16px;
   border-radius: 4px;
   cursor: pointer;
   transition: background 0.3s ease;
+  margin: 0.25rem;
 }
 
 button:hover {
@@ -125,7 +142,7 @@ button:hover {
 
 .admin-links a {
   padding: 10px 20px;
-  background: #007BFF;
+  background: #007bff;
   color: white;
   border-radius: 4px;
   text-decoration: none;
@@ -141,11 +158,13 @@ button:hover {
     flex-direction: column;
   }
 
-  table, form {
+  table,
+  form {
     font-size: 14px;
   }
 
-  th, td {
+  th,
+  td {
     padding: 8px;
   }
 }

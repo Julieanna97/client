@@ -11,8 +11,9 @@ const CreateProduct = () => {
     description: "",
     price: 0,
     stock: 0,
-    category: "",
+    category: "Press On Nails",
     image: "",
+    external_url: "",
   });
 
   const handleChange = (
@@ -53,6 +54,7 @@ const CreateProduct = () => {
             required
             value={formData.name}
             onChange={handleChange}
+            placeholder="Duck Nails - Nail Candi"
           />
         </div>
 
@@ -63,6 +65,7 @@ const CreateProduct = () => {
             required
             value={formData.description}
             onChange={handleChange}
+            placeholder="Write a short product description..."
           ></textarea>
         </div>
 
@@ -72,6 +75,8 @@ const CreateProduct = () => {
             type="number"
             name="price"
             required
+            min="0"
+            step="0.01"
             value={formData.price}
             onChange={handleChange}
           />
@@ -83,6 +88,7 @@ const CreateProduct = () => {
             type="number"
             name="stock"
             required
+            min="0"
             value={formData.stock}
             onChange={handleChange}
           />
@@ -96,6 +102,7 @@ const CreateProduct = () => {
             required
             value={formData.category}
             onChange={handleChange}
+            placeholder="Press On Nails"
           />
         </div>
 
@@ -107,6 +114,38 @@ const CreateProduct = () => {
             required
             value={formData.image}
             onChange={handleChange}
+            placeholder="https://example.com/image.jpg"
+          />
+        </div>
+
+        {formData.image && (
+          <div>
+            <p>Image preview:</p>
+            <img
+              src={formData.image}
+              alt="Product preview"
+              style={{
+                width: "160px",
+                height: "160px",
+                objectFit: "cover",
+                borderRadius: "8px",
+              }}
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = "/no-image.png";
+              }}
+            />
+          </div>
+        )}
+
+        <div>
+          <label>External Product URL:</label>
+          <input
+            type="text"
+            name="external_url"
+            value={formData.external_url}
+            onChange={handleChange}
+            placeholder="https://nailcandimd.com/products/..."
           />
         </div>
 

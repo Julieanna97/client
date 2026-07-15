@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
 import "../Products.css";
 import { API_BASE_URL } from "../lib/api";
 
@@ -11,88 +11,110 @@ interface Product {
   price: number | string;
   stock: number;
   image: string;
-  category: string;
+  category?: string;
+  external_url?: string | null;
 }
 
-const Product = () => {
-  const { id } = useParams<{ id: string }>();
+interface CartItem extends Product {
+  quantity: number;
+}
+
+const Products = () => {
   const navigate = useNavigate();
 
-  const [product, setProduct] = useState<Product | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [quantity, setQuantity] = useState(1);
+  const [error, setError] = useState("");
 
-  const fetchProduct = async () => {
+  const fetchProducts = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/products/${id}`);
-      setProduct(res.data);
+      const res = await axios.get(`${API_BASE_URL}/products`);
+      setProducts(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error("Failed to fetch product", err);
-      alert("Product not found.");
-      navigate("/products");
+      console.error("Failed to fetch products", err);
+      setError("Could not load products from the backend.");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchProduct();
-  }, [id]);
+  const addToCart = (product: Product) => {
+    const cart: CartItem[] = JSON.parse(localStorage.getItem("cart") || "[]");
 
-  const addToCart = () => {
-    if (!product) return;
-
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-
-    const existing = cart.find(
-      (item: Product & { quantity: number }) => item.id === product.id
-    );
+    const existing = cart.find((item) => item.id === product.id);
 
     if (existing) {
-      existing.quantity += quantity;
+      existing.quantity += 1;
     } else {
-      cart.push({ ...product, quantity });
+      cart.push({
+        ...product,
+        quantity: 1,
+      });
     }
 
     localStorage.setItem("cart", JSON.stringify(cart));
+
     alert(`${product.name} added to cart!`);
     navigate("/cart");
   };
 
-  if (loading) return <p>Loading product...</p>;
-  if (!product) return null;
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  if (loading) return <p>Loading products...</p>;
 
   return (
-    <div className="product-detail-page">
-      <h1>{product.name}</h1>
+    <div className="products-page">
+      <h1 className="products-title">Shop Products</h1>
 
-      <img
-        src={product.image}
-        alt={product.name}
-        className="product-image"
-      />
+      {error && <p className="no-products">{error}</p>}
 
-      <p>{product.description}</p>
-      <p>Category: {product.category}</p>
-      <p>{product.price} SEK</p>
-      <p>Stock: {product.stock}</p>
+      {!error && products.length === 0 && (
+        <p className="no-products">No products available.</p>
+      )}
 
-      <label>Quantity:</label>
-      <input
-        type="number"
-        min="1"
-        max={product.stock}
-        value={quantity}
-        onChange={(e) => setQuantity(Number(e.target.value))}
-      />
+      <div className="products-container">
+        {products.map((product) => (
+          <div key={product.id} className="product-card">
+            {product.image && (
+              <img
+                src={product.image}
+                alt={product.name}
+                className="product-image"
+              />
+            )}
 
-      <br />
+            <h2 className="product-title">{product.name}</h2>
 
-      <button onClick={addToCart} disabled={product.stock <= 0}>
-        {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
-      </button>
+            <p>{product.description?.slice(0, 80)}...</p>
+
+            {product.category && <p>Category: {product.category}</p>}
+
+            <p className="product-price">
+              {Number(product.price).toFixed(2)} SEK
+            </p>
+
+            <p>Stock: {product.stock}</p>
+
+            <div>
+              <Link to={`/product/${product.id}`}>View Product</Link>
+
+              <br />
+
+              <button
+                type="button"
+                onClick={() => addToCart(product)}
+                disabled={product.stock <= 0}
+              >
+                {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
 
-export default Product;
+export default Products;

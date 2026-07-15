@@ -1,151 +1,187 @@
-import { useSearchParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../lib/api";
-
-interface SearchItem {
-  title: string;
-  link: string;
-  snippet: string;
-  pagemap?: {
-    cse_thumbnail?: { src: string }[];
-  };
-}
+import "../Products.css";
 
 interface Product {
-  id: number;
+    id: number;
   name: string;
+  description: string;
+  price: number | string;
+  stock: number;
+  category: string;
+  image: string;
+  external_url?: string | null;
 }
+
+interface CartItem extends Product {
+  quantity: number;
+}
+
+const ALLOWED_SITE = "nailcandimd.com";
+
+const normalize = (value = "") => {
+  return value.toLowerCase().trim();
+};
+
+const productMatchesQuery = (product: Product, query: string) => {
+  const searchText = normalize(`
+    ${product.name}
+    ${product.description}
+    ${product.category}
+    ${product.external_url || ""}
+  `);
+
+  const queryWords = normalize(query)
+    .split(" ")
+    .filter((word) => word.length > 0);
+
+  return queryWords.every((word) => searchText.includes(word));
+};
+
+const isImportedProduct = (product: Product) => {
+  return product.external_url?.includes(ALLOWED_SITE);
+};
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
   const query = searchParams.get("q") || "";
 
-  const [results, setResults] = useState<SearchItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [localProductWarning, setLocalProductWarning] = useState("");
 
-  useEffect(() => {
-    const fetchResults = async () => {
-      const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
-      const cx = import.meta.env.VITE_GOOGLE_CX;
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
 
-      setError("");
-      setLocalProductWarning("");
-      setResults([]);
+      const response = await axios.get(`${API_BASE_URL}/products`);
 
-      if (!apiKey || !cx) {
-        setError("Missing Google Custom Search API credentials.");
-        return;
-      }
+      const allProducts: Product[] = Array.isArray(response.data)
+        ? response.data
+        : [];
 
-      if (query.length < 3) {
-        setError("Search term must be at least 3 characters.");
-        return;
-      }
+      const matched = allProducts.filter((product) => {
+        return isImportedProduct(product) && productMatchesQuery(product, query);
+      });
 
-      try {
-        const googleRes = await axios.get(
-          "https://www.googleapis.com/customsearch/v1",
-          {
-            params: {
-              key: apiKey,
-              cx,
-              q: query,
-            },
-          }
-        );
-
-        setResults(googleRes.data.items || []);
-      } catch (err) {
-        console.error("Google search error:", err);
-        setError(
-          "Could not fetch external search results. Check your Google API key, search engine ID, or API restrictions."
-        );
-      }
-
-      try {
-        const localRes = await axios.get(`${API_BASE_URL}/products`);
-        setProducts(localRes.data || []);
-      } catch (err) {
-        console.error("Local products error:", err);
-        setLocalProductWarning(
-          "Local shop products could not be loaded, but external search can still work."
-        );
-      }
-    };
-
-    fetchResults();
-  }, [query]);
-
-  const matchToLocalProduct = (title: string) => {
-    return products.find((product) =>
-      title.toLowerCase().includes(product.name.toLowerCase())
-    );
+      setProducts(allProducts);
+      setFilteredProducts(matched);
+    } catch (err) {
+      console.error("Could not fetch products:", err);
+      setError(
+        "Could not load products from your database. Check that the backend is running."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const addToCart = (product: Product) => {
+    const cart: CartItem[] = JSON.parse(localStorage.getItem("cart") || "[]");
+
+    const existing = cart.find((item) => item.id === product.id);
+
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      cart.push({
+        ...product,
+        quantity: 1,
+      });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+
+    alert(`${product.name} added to cart!`);
+    navigate("/cart");
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, [query]);
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">
-        Search Results for: "{query}"
-      </h1>
+    <div className="products-page">
+      <h1 className="products-title">Search Results for: "{query}"</h1>
 
-      {error && <p className="text-red-500">{error}</p>}
+      <p>
+        These results are products saved in your e-shop database and matched
+        from the custom Nail Candi search project.
+      </p>
 
-      {localProductWarning && (
-        <p className="text-gray-500">{localProductWarning}</p>
+      <div style={{ marginBottom: "1rem" }}>
+        <Link to={`/search-import?q=${encodeURIComponent(query)}`}>
+          Import products from custom search →
+        </Link>
+      </div>
+
+      {loading && <p>Loading search results...</p>}
+
+      {error && <p className="no-products">{error}</p>}
+
+      {!loading && !error && filteredProducts.length === 0 && (
+        <div className="no-products">
+          <p>No saved products found for "{query}".</p>
+          <p>
+            Use the import helper to add matching products from Nail Candi into
+            your database first.
+          </p>
+        </div>
       )}
 
-      {results.length === 0 && !error && <p>No results found.</p>}
+      <div className="products-container">
+        {filteredProducts.map((product) => (
+          <div key={product.id} className="product-card">
+            {product.image && (
+              <img
+                src={product.image}
+                alt={product.name}
+                className="product-image"
+              />
+            )}
 
-      <div className="grid gap-4">
-        {results.map((item, i) => {
-          const matchedProduct = matchToLocalProduct(item.title);
+            <h2 className="product-title">{product.name}</h2>
 
-          return (
-            <div key={i} className="border p-4 rounded shadow">
-              {item.pagemap?.cse_thumbnail ? (
-                <img
-                  src={item.pagemap.cse_thumbnail[0].src}
-                  alt={item.title}
-                  className="w-32 h-32 object-cover mb-2"
-                />
-              ) : (
-                <img
-                  src="/no-image.png"
-                  alt="No thumbnail"
-                  className="w-32 h-32 object-cover mb-2"
-                />
-              )}
+            <p>{product.description}</p>
 
-              <h2 className="text-lg font-semibold">{item.title}</h2>
+            <p>
+              <strong>Category:</strong> {product.category}
+            </p>
 
-              <p className="text-sm text-gray-700">{item.snippet}</p>
+            <p>
+              <strong>Price:</strong> {Number(product.price).toFixed(2)} SEK
+            </p>
 
-              <div className="mt-2">
-                {matchedProduct && (
-                  <Link
-                    to={`/product/${matchedProduct.id}`}
-                    className="text-blue-500 underline inline-block mr-4"
-                  >
-                    View on Your Shop →
-                  </Link>
-                )}
+            <p>
+              <strong>Stock:</strong> {product.stock}
+            </p>
 
-                <a
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 underline inline-block"
-                >
-                  Open external result ↗
-                </a>
-              </div>
+            <div>
+              <Link to={`/product/${product.id}`}>View Product →</Link>
             </div>
-          );
-        })}
+
+            <br />
+
+            <button
+              type="button"
+              onClick={() => addToCart(product)}
+              disabled={product.stock <= 0}
+            >
+              {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
+            </button>
+          </div>
+        ))}
       </div>
+
+      <p style={{ marginTop: "2rem", fontSize: "0.9rem", opacity: 0.7 }}>
+        Total saved Nail Candi products in database:{" "}
+        {products.filter(isImportedProduct).length}
+      </p>
     </div>
   );
 };
