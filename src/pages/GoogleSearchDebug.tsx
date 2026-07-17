@@ -88,18 +88,18 @@ const GoogleSearchDebug = () => {
 
     const handleResultsReady = (
       gname: string,
-      query: string,
-      promos: unknown,
-      results: GoogleElementResult[]
+      searchQuery: string,
+      _promos: unknown,
+      rawResults: GoogleElementResult[]
     ) => {
       console.clear();
 
-      const teacherStyleResults = (results || []).map(makeTeacherStyleResult);
+      const teacherStyleResults = (rawResults || []).map(makeTeacherStyleResult);
 
       console.log({
         kind: "customsearch#search",
         searchEngineName: gname,
-        query,
+        query: searchQuery,
         items: teacherStyleResults,
       });
 

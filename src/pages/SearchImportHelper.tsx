@@ -151,7 +151,7 @@ const SearchImportHelper = () => {
     const handleResultsReady = (
       gname: string,
       searchQuery: string,
-      promos: unknown,
+      _promos: unknown,
       rawResults: GoogleElementResult[]
     ) => {
       console.log("Google search engine:", gname);
