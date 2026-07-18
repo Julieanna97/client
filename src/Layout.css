@@ -1,38 +1,16 @@
 .layout-container {
-  display: flex;
-  flex-direction: column;
   min-height: 100vh;
-  height: auto;
-  background-color: #f7f9fc;
-  overflow: visible;
 }
 
 .layout-main {
-  flex: 1;
-  display: block;
-  width: 100%;
-  padding: 20px;
-  overflow: visible;
-}
-
-.layout-content {
-  width: 100%;
-  max-width: 1200px;
-  min-height: auto;
+  width: min(1180px, calc(100% - 2rem));
   margin: 0 auto;
-  background-color: white;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  overflow: visible;
+  padding: 2rem 0 1rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 760px) {
   .layout-main {
-    padding: 10px;
-  }
-
-  .layout-content {
-    padding: 16px;
+    width: min(100% - 1rem, 1180px);
+    padding-top: 1rem;
   }
 }

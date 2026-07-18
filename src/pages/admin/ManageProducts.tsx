@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { API_BASE_URL } from "../../lib/api";
+import "../../Admin.css";
 
 interface Product {
   id: number;
@@ -26,73 +27,80 @@ const ManageProducts = () => {
     }
   };
 
-  const deleteProduct = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this product?")) {
-      return;
-    }
-
-    try {
-      await axios.delete(`${API_BASE_URL}/products/${id}`);
-
-      setProducts(products.filter((product) => product.id !== id));
-    } catch (err) {
-      console.error("Failed to delete product", err);
-      alert("Error deleting product.");
-    }
+  const showReadOnlyMessage = () => {
+    alert("Demo admin is read-only so the live portfolio database stays safe.");
   };
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
-  if (loading) return <p>Loading products...</p>;
+  if (loading) return <p className="loading-state">Loading products...</p>;
 
   return (
-    <div className="container">
-      <h1>Manage Products</h1>
+    <div className="admin-panel">
+      <section className="admin-hero">
+        <p className="eyebrow">Admin / products</p>
+        <h1>Product catalog</h1>
+        <p>
+          This table shows the products saved in the Aiven MySQL database and
+          displayed in the live shop.
+        </p>
 
-      <Link to="/admin/products/create" className="link-button">
-        + Create Product
-      </Link>
+        <button type="button" className="disabled-demo-button" onClick={showReadOnlyMessage}>
+          + Create Product disabled in demo
+        </button>
+      </section>
 
       {products.length === 0 ? (
         <p>No products found.</p>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Stock</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {products.map((product) => (
-              <tr key={product.id}>
-                <td>{product.name}</td>
-                <td>{product.category}</td>
-                <td>{Number(product.price).toFixed(2)} SEK</td>
-                <td>{product.stock}</td>
-
-                <td className="actions">
-                  <Link
-                    to={`/admin/products/update/${product.id}`}
-                    className="link-button"
-                  >
-                    Edit
-                  </Link>
-
-                  <button onClick={() => deleteProduct(product.id)}>
-                    Delete
-                  </button>
-                </td>
+        <div className="admin-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Preview</th>
+                <th>Demo actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {products.map((product) => (
+                <tr key={product.id}>
+                  <td>{product.name}</td>
+                  <td>{product.category}</td>
+                  <td>{Number(product.price).toFixed(2)} SEK</td>
+                  <td>{product.stock}</td>
+                  <td>
+                    <Link to={`/product/${product.id}`} className="link-button">
+                      View
+                    </Link>
+                  </td>
+                  <td className="actions">
+                    <button
+                      type="button"
+                      className="disabled-demo-button"
+                      onClick={showReadOnlyMessage}
+                    >
+                      Edit disabled
+                    </button>
+                    <button
+                      type="button"
+                      className="disabled-demo-button"
+                      onClick={showReadOnlyMessage}
+                    >
+                      Delete disabled
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

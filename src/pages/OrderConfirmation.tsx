@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import "../Cart.css";
 import { API_BASE_URL } from "../lib/api";
 
 interface OrderItem {
@@ -72,52 +73,68 @@ const OrderConfirmation = () => {
     fetchOrder();
   }, [sessionId, navigate]);
 
-  if (loading) return <p>Loading order confirmation...</p>;
+  if (loading) return <p className="loading-state">Loading order confirmation...</p>;
   if (!order) return null;
 
   return (
-    <div>
-      <h1>Thank you for your purchase!</h1>
-      <p>Your order has been received and is being processed.</p>
-
+    <section className="order-confirmation-page">
       <div>
-        <h2>Customer Information</h2>
-
-        <p>
-          <strong>Name:</strong> {order.customer_firstname}{" "}
-          {order.customer_lastname}
-        </p>
-
-        <p>
-          <strong>Email:</strong> {order.customer_email}
-        </p>
-
-        <p>
-          <strong>Phone:</strong> {order.customer_phone}
-        </p>
-
-        <p>
-          <strong>Address:</strong> {order.customer_street_address},{" "}
-          {order.customer_postal_code} {order.customer_city},{" "}
-          {order.customer_country}
-        </p>
+        <p className="eyebrow">Payment complete</p>
+        <h1>Thank you for your purchase!</h1>
+        <p>Your order has been received and saved in the admin dashboard.</p>
       </div>
 
-      <div>
-        <h2>Order Summary</h2>
+      <div className="checkout-grid">
+        <div className="order-card">
+          <h2>Customer information</h2>
 
-        <ul>
+          <p>
+            <strong>Name:</strong> {order.customer_firstname}{" "}
+            {order.customer_lastname}
+          </p>
+
+          <p>
+            <strong>Email:</strong> {order.customer_email}
+          </p>
+
+          <p>
+            <strong>Phone:</strong> {order.customer_phone}
+          </p>
+
+          <p>
+            <strong>Address:</strong> {order.customer_street_address},{" "}
+            {order.customer_postal_code} {order.customer_city},{" "}
+            {order.customer_country}
+          </p>
+        </div>
+
+        <div className="order-card">
+          <h2>Order summary</h2>
+
           {order.order_items.map((item) => (
-            <li key={item.id} className="border-b pb-2">
-              {item.product_name} x {item.quantity} —{" "}
-              {(Number(item.unit_price) * item.quantity).toFixed(2)} SEK
-            </li>
+            <div key={item.id} className="checkout-item">
+              <span>
+                {item.product_name} x {item.quantity}
+              </span>
+              <strong>
+                {(Number(item.unit_price) * item.quantity).toFixed(2)} SEK
+              </strong>
+            </div>
           ))}
-        </ul>
 
-        <p>Total: {Number(order.total_price).toFixed(2)} SEK</p>
+          <h2>Total: {Number(order.total_price).toFixed(2)} SEK</h2>
+        </div>
       </div>
-    </div>
+
+      <div className="hero-actions">
+        <Link to="/products" className="primary-link">
+          Continue shopping
+        </Link>
+        <Link to="/admin/orders" className="secondary-link">
+          View in admin demo
+        </Link>
+      </div>
+    </section>
   );
 };
 

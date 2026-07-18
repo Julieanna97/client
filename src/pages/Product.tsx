@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import "../Products.css";
 import { API_BASE_URL } from "../lib/api";
@@ -42,62 +42,72 @@ const Product = () => {
 
   useEffect(() => {
     fetchProduct();
-  }, [id]);
+  }, [id, navigate]);
 
   const addToCart = () => {
     if (!product) return;
 
     const cart: CartItem[] = JSON.parse(localStorage.getItem("cart") || "[]");
-
     const existing = cart.find((item) => item.id === product.id);
 
     if (existing) {
       existing.quantity += quantity;
     } else {
-      cart.push({
-        ...product,
-        quantity,
-      });
+      cart.push({ ...product, quantity });
     }
 
     localStorage.setItem("cart", JSON.stringify(cart));
-
-    alert(`${product.name} added to cart!`);
     navigate("/cart");
   };
 
-  if (loading) return <p>Loading product...</p>;
+  if (loading) return <p className="loading-state">Loading product...</p>;
   if (!product) return null;
 
   return (
-    <div className="product-detail-page">
-      <h1>{product.name}</h1>
+    <section className="product-detail-page">
+      <Link to="/products" className="muted-link">
+        ← Back to products
+      </Link>
 
-      {product.image && (
-        <img src={product.image} alt={product.name} className="product-image" />
-      )}
+      <div className="product-detail-grid">
+        <div className="product-detail-image">
+          <img
+            src={product.image || "/no-image.png"}
+            alt={product.name}
+            className="product-image"
+            onError={(event) => {
+              event.currentTarget.onerror = null;
+              event.currentTarget.src = "/no-image.png";
+            }}
+          />
+        </div>
 
-      <p>{product.description}</p>
-      <p>Category: {product.category}</p>
-      <p>{Number(product.price).toFixed(2)} SEK</p>
-      <p>Stock: {product.stock}</p>
+        <div className="product-detail-copy">
+          <p className="product-category">{product.category}</p>
+          <h1>{product.name}</h1>
+          <p>{product.description}</p>
 
-      <label>Quantity:</label>
+          <div className="detail-price-row">
+            <strong>{Number(product.price).toFixed(2)} SEK</strong>
+            <span>{product.stock} in stock</span>
+          </div>
 
-      <input
-        type="number"
-        min="1"
-        max={product.stock}
-        value={quantity}
-        onChange={(e) => setQuantity(Number(e.target.value))}
-      />
+          <label htmlFor="quantity">Quantity</label>
+          <input
+            id="quantity"
+            type="number"
+            min="1"
+            max={product.stock}
+            value={quantity}
+            onChange={(event) => setQuantity(Number(event.target.value))}
+          />
 
-      <br />
-
-      <button onClick={addToCart} disabled={product.stock <= 0}>
-        {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
-      </button>
-    </div>
+          <button onClick={addToCart} disabled={product.stock <= 0}>
+            {product.stock > 0 ? "Add to cart" : "Out of stock"}
+          </button>
+        </div>
+      </div>
+    </section>
   );
 };
 

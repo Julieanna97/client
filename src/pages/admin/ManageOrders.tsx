@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { API_BASE_URL } from "../../lib/api";
+import "../../Admin.css";
 
 interface Order {
   id: number;
@@ -25,31 +26,8 @@ const ManageOrders = () => {
     }
   };
 
-  const updateOrderStatus = async (orderId: number, newStatus: string) => {
-    try {
-      await axios.patch(`${API_BASE_URL}/orders/${orderId}`, {
-        order_status: newStatus,
-      });
-
-      fetchOrders();
-    } catch (error) {
-      console.error("Error updating order:", error);
-      alert("Error updating order.");
-    }
-  };
-
-  const deleteOrder = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this order?")) {
-      return;
-    }
-
-    try {
-      await axios.delete(`${API_BASE_URL}/orders/${id}`);
-      fetchOrders();
-    } catch (error) {
-      console.error("Error deleting order:", error);
-      alert("Error deleting order.");
-    }
+  const showReadOnlyMessage = () => {
+    alert("Demo admin is read-only so order changes are disabled.");
   };
 
   useEffect(() => {
@@ -57,30 +35,38 @@ const ManageOrders = () => {
   }, []);
 
   return (
-    <div>
-      <h1>Manage Orders</h1>
+    <div className="admin-panel">
+      <section className="admin-hero">
+        <p className="eyebrow">Admin / orders</p>
+        <h1>Orders</h1>
+        <p>
+          Orders are created when a visitor completes the checkout flow. This
+          screen demonstrates how order management is displayed in the admin
+          area.
+        </p>
+      </section>
 
       {orders.length === 0 ? (
         <p>No orders found.</p>
       ) : (
-        <div>
+        <div className="order-list">
           {orders.map((order) => (
-            <div key={order.id}>
-              <p>
-                <strong>Order ID:</strong> {order.id}
-              </p>
+            <article key={order.id} className="order-card">
+              <div className="order-card-header">
+                <div>
+                  <p className="eyebrow">Order #{order.id}</p>
+                  <h2>{Number(order.total_price).toFixed(2)} SEK</h2>
+                </div>
+
+                <span className="status-pill">{order.order_status}</span>
+              </div>
 
               <p>
                 <strong>Customer ID:</strong> {order.customer_id}
               </p>
 
               <p>
-                <strong>Total Price:</strong>{" "}
-                {Number(order.total_price).toFixed(2)} SEK
-              </p>
-
-              <p>
-                <strong>Payment Status:</strong> {order.payment_status}
+                <strong>Payment:</strong> {order.payment_status}
               </p>
 
               <p>
@@ -88,35 +74,32 @@ const ManageOrders = () => {
               </p>
 
               <p>
-                <strong>Created At:</strong>{" "}
+                <strong>Created:</strong>{" "}
                 {new Date(order.created_at).toLocaleString()}
               </p>
 
-              <div>
-                <label>Order Status:</label>
+              <div className="actions">
+                <Link to={`/admin/orders/${order.id}`} className="link-button">
+                  View details
+                </Link>
 
-                <select
-                  value={order.order_status}
-                  onChange={(e) =>
-                    updateOrderStatus(order.id, e.target.value)
-                  }
+                <button
+                  type="button"
+                  className="disabled-demo-button"
+                  onClick={showReadOnlyMessage}
                 >
-                  <option value="Pending">Pending</option>
-                  <option value="Processing">Processing</option>
-                  <option value="Cancelled">Cancelled</option>
-                  <option value="Shipped">Shipped</option>
-                  <option value="Received">Received</option>
-                </select>
-              </div>
-
-              <div>
-                <button onClick={() => deleteOrder(order.id)}>
-                  Delete Order
+                  Update disabled
                 </button>
 
-                <Link to={`/admin/orders/${order.id}`}>View Details</Link>
+                <button
+                  type="button"
+                  className="disabled-demo-button"
+                  onClick={showReadOnlyMessage}
+                >
+                  Delete disabled
+                </button>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       )}

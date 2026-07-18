@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { API_BASE_URL } from "../../lib/api";
 
 const CreateProduct = () => {
   const navigate = useNavigate();
@@ -31,9 +29,8 @@ const CreateProduct = () => {
     e.preventDefault();
 
     try {
-      await axios.post(`${API_BASE_URL}/products`, formData);
-
-      alert("Product created!");
+      console.log("Demo create product payload:", formData);
+      alert("Demo admin is read-only, so this product was not saved.");
       navigate("/admin/products");
     } catch (err) {
       console.error("Failed to create product", err);

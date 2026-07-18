@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import "../Products.css";
@@ -23,8 +23,23 @@ const Products = () => {
   const navigate = useNavigate();
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [activeCategory, setActiveCategory] = useState("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const categories = useMemo(() => {
+    const productCategories = products
+      .map((product) => product.category)
+      .filter((category): category is string => Boolean(category));
+
+    return ["All", ...Array.from(new Set(productCategories))];
+  }, [products]);
+
+  const visibleProducts = useMemo(() => {
+    if (activeCategory === "All") return products;
+
+    return products.filter((product) => product.category === activeCategory);
+  }, [activeCategory, products]);
 
   const fetchProducts = async () => {
     try {
@@ -46,15 +61,10 @@ const Products = () => {
     if (existing) {
       existing.quantity += 1;
     } else {
-      cart.push({
-        ...product,
-        quantity: 1,
-      });
+      cart.push({ ...product, quantity: 1 });
     }
 
     localStorage.setItem("cart", JSON.stringify(cart));
-
-    alert(`${product.name} added to cart!`);
     navigate("/cart");
   };
 
@@ -62,11 +72,24 @@ const Products = () => {
     fetchProducts();
   }, []);
 
-  if (loading) return <p>Loading products...</p>;
+  if (loading) {
+    return (
+      <div className="products-page">
+        <p className="loading-state">Loading products...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="products-page">
-      <h1 className="products-title">Shop Products</h1>
+      <section className="shop-hero">
+        <p className="eyebrow">Cloud database collection</p>
+        <h1 className="products-title">Press-on nail sets</h1>
+        <p>
+          Products are saved in the e-shop database and connected to search,
+          product pages, cart and checkout.
+        </p>
+      </section>
 
       {error && <p className="no-products">{error}</p>}
 
@@ -74,43 +97,69 @@ const Products = () => {
         <p className="no-products">No products available.</p>
       )}
 
+      {products.length > 0 && (
+        <div className="category-filter">
+          {categories.map((category) => (
+            <button
+              key={category}
+              type="button"
+              className={category === activeCategory ? "active" : ""}
+              onClick={() => setActiveCategory(category)}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="products-container">
-        {products.map((product) => (
-          <div key={product.id} className="product-card">
-            {product.image && (
-              <img
-                src={product.image}
-                alt={product.name}
-                className="product-image"
-              />
-            )}
-
-            <h2 className="product-title">{product.name}</h2>
-
-            <p>{product.description?.slice(0, 80)}...</p>
-
-            {product.category && <p>Category: {product.category}</p>}
-
-            <p className="product-price">
-              {Number(product.price).toFixed(2)} SEK
-            </p>
-
-            <p>Stock: {product.stock}</p>
-
-            <div>
-              <Link to={`/product/${product.id}`}>View Product</Link>
-
-              <br />
-
-              <button
-                type="button"
-                onClick={() => addToCart(product)}
-                disabled={product.stock <= 0}
-              >
-                {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
-              </button>
+        {visibleProducts.map((product) => (
+          <article key={product.id} className="product-card">
+            <div className="product-image-wrap">
+              {product.image && (
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="product-image"
+                  onError={(event) => {
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src = "/no-image.png";
+                  }}
+                />
+              )}
             </div>
-          </div>
+
+            <div className="product-card-content">
+              {product.category && (
+                <p className="product-category">{product.category}</p>
+              )}
+
+              <h2 className="product-title">{product.name}</h2>
+              <p className="product-description">
+                {product.description?.slice(0, 105)}
+                {product.description?.length > 105 ? "..." : ""}
+              </p>
+
+              <div className="product-meta">
+                <span>{Number(product.price).toFixed(2)} SEK</span>
+                <span>{product.stock} in stock</span>
+              </div>
+
+              <div className="product-actions">
+                <Link to={`/product/${product.id}`} className="secondary-link small">
+                  View details
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() => addToCart(product)}
+                  disabled={product.stock <= 0}
+                >
+                  {product.stock > 0 ? "Add to cart" : "Out of stock"}
+                </button>
+              </div>
+            </div>
+          </article>
         ))}
       </div>
     </div>

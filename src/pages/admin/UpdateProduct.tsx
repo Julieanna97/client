@@ -60,9 +60,8 @@ const UpdateProduct = () => {
     e.preventDefault();
 
     try {
-      await axios.patch(`${API_BASE_URL}/products/${id}`, formData);
-
-      alert("Product updated!");
+      console.log("Demo update product payload:", formData);
+      alert("Demo admin is read-only, so this product was not updated.");
       navigate("/admin/products");
     } catch (err) {
       console.error("Update failed:", err);

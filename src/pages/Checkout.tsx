@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "../Cart.css";
 import { API_BASE_URL } from "../lib/api";
 
 interface CartItem {
@@ -49,8 +50,8 @@ const Checkout = () => {
     }
   }, [navigate]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
 
     const updatedInfo = {
       ...customerInfo,
@@ -63,9 +64,7 @@ const Checkout = () => {
 
   const updateQuantity = (id: number, quantity: number) => {
     const updatedCart = cart.map((item) =>
-      item.id === id
-        ? { ...item, quantity: quantity > 0 ? quantity : 1 }
-        : item
+      item.id === id ? { ...item, quantity: quantity > 0 ? quantity : 1 } : item
     );
 
     setCart(updatedCart);
@@ -90,8 +89,8 @@ const Checkout = () => {
     );
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     if (cart.length === 0) {
       alert("Your cart is empty.");
@@ -137,73 +136,72 @@ const Checkout = () => {
   };
 
   if (cart.length === 0) {
-    return <p>Your cart is empty.</p>;
+    return <p className="cart-empty">Your cart is empty.</p>;
   }
 
   return (
-    <div>
-      <h1>Checkout</h1>
+    <section className="checkout-page">
+      <div>
+        <p className="eyebrow">Secure checkout</p>
+        <h1>Complete your order</h1>
+      </div>
 
-      <h2>Your Cart</h2>
+      <div className="checkout-grid">
+        <div className="checkout-card">
+          <h2>Your cart</h2>
 
-      {cart.map((item) => (
-        <div key={item.id}>
-          <div>
-            <h3 className="font-semibold">{item.name}</h3>
-            <p>
-              {item.price} SEK x {item.quantity}
-            </p>
-          </div>
+          {cart.map((item) => (
+            <div key={item.id} className="checkout-item">
+              <div>
+                <strong>{item.name}</strong>
+                <p>
+                  {Number(item.price).toFixed(2)} SEK x {item.quantity}
+                </p>
+              </div>
 
-          <div className="flex gap-2">
-            <input
-              type="number"
-              value={item.quantity}
-              min="1"
-              onChange={(e) =>
-                updateQuantity(item.id, Number(e.target.value))
-              }
-            />
+              <div className="cart-item-actions">
+                <input
+                  type="number"
+                  value={item.quantity}
+                  min="1"
+                  onChange={(event) =>
+                    updateQuantity(item.id, Number(event.target.value))
+                  }
+                />
 
-            <button type="button" onClick={() => removeItem(item.id)}>
-              Remove
-            </button>
-          </div>
+                <button type="button" onClick={() => removeItem(item.id)}>
+                  Remove
+                </button>
+              </div>
+            </div>
+          ))}
+
+          <h2>Total: {getTotal().toFixed(2)} SEK</h2>
         </div>
-      ))}
 
-      <h3>Total: {getTotal().toFixed(2)} SEK</h3>
+        <form onSubmit={handleSubmit}>
+          <h2>Customer information</h2>
 
-      <h2>Customer Information</h2>
+          {Object.entries(customerInfo).map(([key, value]) => (
+            <div key={key}>
+              <label>{key.replace("_", " ")}</label>
 
-      <form onSubmit={handleSubmit}>
-        {Object.entries(customerInfo).map(([key, value]) => (
-          <div key={key}>
-            <label>{key.replace("_", " ")}:</label>
+              <input
+                type="text"
+                name={key}
+                value={String(value)}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+          ))}
 
-            <input
-              type="text"
-              name={key}
-              value={String(value)}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-        ))}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className={`bg-green-600 text-white px-6 py-2 rounded ${
-            loading
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:bg-green-700 transition"
-          }`}
-        >
-          {loading ? "Redirecting to payment..." : "Proceed to Payment"}
-        </button>
-      </form>
-    </div>
+          <button type="submit" disabled={loading}>
+            {loading ? "Redirecting to Stripe..." : "Proceed to payment"}
+          </button>
+        </form>
+      </div>
+    </section>
   );
 };
 

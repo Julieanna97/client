@@ -1,11 +1,16 @@
 import { createBrowserRouter } from "react-router-dom";
 import Layout from "../components/Layout";
+import AdminGate from "../components/AdminGate";
 
 // Shop Pages
 import Home from "../pages/Home";
 import Products from "../pages/Products";
 import Product from "../pages/Product";
 import Cart from "../pages/Cart";
+import Checkout from "../pages/Checkout";
+import OrderConfirmation from "../pages/OrderConfirmation";
+import SearchResults from "../pages/SearchResults";
+import SearchImportHelper from "../pages/SearchImportHelper";
 import NotFound from "../pages/NotFound";
 
 // Admin Pages
@@ -18,18 +23,12 @@ import CreateProduct from "../pages/admin/CreateProduct";
 import UpdateProduct from "../pages/admin/UpdateProduct";
 import ManageOrders from "../pages/admin/ManageOrders";
 import OrderDetails from "../pages/admin/OrderDetails";
-import OrderConfirmation from "../pages/OrderConfirmation";
-import Checkout from "../pages/Checkout";
-import SearchResults from "../pages/SearchResults";
-import GoogleSearchDebug from "../pages/GoogleSearchDebug";
-import SearchImportHelper from "../pages/SearchImportHelper";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Layout />,
     children: [
-      // Shop
       { index: true, element: <Home /> },
       { path: "products", element: <Products /> },
       { path: "product/:id", element: <Product /> },
@@ -37,39 +36,27 @@ const router = createBrowserRouter([
       { path: "checkout", element: <Checkout /> },
       { path: "order-confirmation", element: <OrderConfirmation /> },
       { path: "search", element: <SearchResults /> },
-      {
-        path: "search-debug",
-        element: <GoogleSearchDebug />,
-      },
-      {
-        path: "search-import",
-        element: <SearchImportHelper />,
-      },
-      
+      { path: "search-import", element: <SearchImportHelper /> },
 
-      // Admin
       {
         path: "admin",
+        element: <AdminGate />,
         children: [
           { index: true, element: <AdminHome /> },
 
-          // Customers
           { path: "customers", element: <ManageCustomers /> },
           { path: "customers/create", element: <CreateCustomer /> },
           { path: "customers/update/:id", element: <UpdateCustomer /> },
 
-          // Products
           { path: "products", element: <ManageProducts /> },
           { path: "products/create", element: <CreateProduct /> },
           { path: "products/update/:id", element: <UpdateProduct /> },
 
-          // Orders
           { path: "orders", element: <ManageOrders /> },
           { path: "orders/:id", element: <OrderDetails /> },
         ],
       },
 
-      // Catch-all route
       { path: "*", element: <NotFound /> },
     ],
   },

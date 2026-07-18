@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../../lib/api";
+import "../../Admin.css";
 
 interface OrderItem {
   id: number;
@@ -48,51 +49,33 @@ const OrderDetails = () => {
     }
   };
 
-  const deleteItem = async (itemId: number) => {
-    if (!window.confirm("Are you sure you want to remove this item?")) {
-      return;
-    }
-
-    try {
-      await axios.delete(`${API_BASE_URL}/order-items/${itemId}`);
-      fetchOrder();
-    } catch (err) {
-      console.error("Failed to delete item", err);
-      alert("Error deleting item.");
-    }
-  };
-
-  const updateQuantity = async (itemId: number, quantity: number) => {
-    if (quantity <= 0) {
-      alert("Quantity must be greater than 0.");
-      return;
-    }
-
-    try {
-      await axios.patch(`${API_BASE_URL}/order-items/${itemId}`, {
-        quantity,
-      });
-
-      fetchOrder();
-    } catch (err) {
-      console.error("Failed to update quantity", err);
-      alert("Error updating quantity.");
-    }
+  const showReadOnlyMessage = () => {
+    alert("Demo admin is read-only so order item changes are disabled.");
   };
 
   useEffect(() => {
     fetchOrder();
-  }, [id]);
+  }, [id, navigate]);
 
-  if (loading) return <p>Loading order details...</p>;
+  if (loading) return <p className="loading-state">Loading order details...</p>;
   if (!order) return null;
 
   return (
-    <div>
-      <h1>Order #{order.id}</h1>
+    <div className="admin-panel">
+      <section className="admin-hero">
+        <Link to="/admin/orders" className="muted-link">
+          ← Back to orders
+        </Link>
+        <p className="eyebrow">Admin / order details</p>
+        <h1>Order #{order.id}</h1>
+        <p>
+          Detailed view of the customer, payment status and order items created
+          through the checkout flow.
+        </p>
+      </section>
 
-      <div>
-        <h2>Customer Info</h2>
+      <div className="order-card">
+        <h2>Customer info</h2>
 
         <p>
           <strong>Name:</strong> {order.customer_firstname}{" "}
@@ -114,16 +97,14 @@ const OrderDetails = () => {
         </p>
       </div>
 
-      <div>
-        <h2>Order Items</h2>
-
+      <div className="admin-table-wrap">
         <table>
           <thead>
             <tr>
               <th>Product</th>
               <th>Quantity</th>
-              <th>Price</th>
-              <th>Actions</th>
+              <th>Unit price</th>
+              <th>Demo actions</th>
             </tr>
           </thead>
 
@@ -131,22 +112,16 @@ const OrderDetails = () => {
             {order.order_items.map((item) => (
               <tr key={item.id}>
                 <td>{item.product_name}</td>
-
-                <td>
-                  <input
-                    type="number"
-                    min="1"
-                    value={item.quantity}
-                    onChange={(e) =>
-                      updateQuantity(item.id, Number(e.target.value))
-                    }
-                  />
-                </td>
-
+                <td>{item.quantity}</td>
                 <td>{Number(item.unit_price).toFixed(2)} SEK</td>
-
                 <td>
-                  <button onClick={() => deleteItem(item.id)}>Delete</button>
+                  <button
+                    type="button"
+                    className="disabled-demo-button"
+                    onClick={showReadOnlyMessage}
+                  >
+                    Editing disabled
+                  </button>
                 </td>
               </tr>
             ))}
@@ -160,7 +135,15 @@ const OrderDetails = () => {
         </table>
       </div>
 
-      <div>Total: {Number(order.total_price).toFixed(2)} SEK</div>
+      <div className="order-card">
+        <h2>Total: {Number(order.total_price).toFixed(2)} SEK</h2>
+        <p>
+          <strong>Payment:</strong> {order.payment_status}
+        </p>
+        <p>
+          <strong>Status:</strong> {order.order_status}
+        </p>
+      </div>
     </div>
   );
 };
