@@ -3,14 +3,14 @@
 }
 
 .layout-main {
-  width: min(1180px, calc(100% - 2rem));
+  width: min(1240px, calc(100% - 2rem));
   margin: 0 auto;
-  padding: 2rem 0 1rem;
+  padding: 2.2rem 0 1rem;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 780px) {
   .layout-main {
-    width: min(100% - 1rem, 1180px);
-    padding-top: 1rem;
+    width: min(100% - 1rem, 1240px);
+    padding-top: 1.2rem;
   }
 }

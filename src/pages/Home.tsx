@@ -1,107 +1,90 @@
 import { Link } from "react-router-dom";
+import heroImage from "../assets/hero-nails.png";
+import "../Home.css";
+
+const benefits = [
+  {
+    icon: "♡",
+    title: "Handmade",
+    text: "With love",
+  },
+  {
+    icon: "↻",
+    title: "Reusable",
+    text: "Up to 20+ wears",
+  },
+  {
+    icon: "✦",
+    title: "Salon quality",
+    text: "In minutes",
+  },
+  {
+    icon: "◇",
+    title: "Cruelty free",
+    text: "And vegan",
+  },
+];
 
 const Home = () => {
   return (
-    <section className="home-page">
-      <div className="hero-grid">
-        <div className="hero-copy">
-          <p className="eyebrow">Portfolio e-commerce project</p>
-          <h1>Search-powered press-on nail shop</h1>
-          <p>
-            A polished full-stack e-commerce demo where products are stored in a
-            MySQL cloud database, searched through a custom Google search flow,
-            and connected to Stripe checkout.
+    <main className="home-page">
+      <section className="nail-hero">
+        <div className="nail-hero__content">
+          <p className="nail-hero__eyebrow">Handmade press-on nails</p>
+
+          <h1 className="nail-hero__title">
+            Luxury Press-On Nails,
+            <span>Made for You</span>
+          </h1>
+
+          <p className="nail-hero__description">
+            Reusable, salon-quality press-on nails designed for effortless
+            beauty and a polished look in minutes.
           </p>
 
-          <div className="hero-actions">
-            <Link to="/products" className="primary-link">
-              Browse products
+          <div className="nail-hero__actions">
+            <Link to="/products" className="nail-hero__primary">
+              Shop now
+              <span aria-hidden="true">→</span>
             </Link>
-            <Link to="/search?q=duck" className="secondary-link">
-              Try search demo
-            </Link>
-          </div>
 
-          <div className="tech-strip" aria-label="Project technologies">
-            <span>React</span>
-            <span>TypeScript</span>
-            <span>Express</span>
-            <span>Aiven MySQL</span>
-            <span>Stripe</span>
-            <span>Vercel</span>
+            <Link to="/products" className="nail-hero__secondary">
+              View collection
+            </Link>
           </div>
         </div>
 
-        <div className="hero-showcase" aria-label="Project feature preview">
-          <div className="floating-card search-preview">
-            <span className="preview-label">Search query</span>
-            <strong>duck nails</strong>
-            <p>Matched to saved products in my own e-shop database.</p>
-          </div>
+        <div className="nail-hero__media">
+          <img
+            src={heroImage}
+            alt="Elegant press-on nails with delicate decorations"
+          />
 
-          <div className="floating-card product-preview">
-            <div className="polish-bubbles">
-              <span></span>
-              <span></span>
-              <span></span>
+          <div className="nail-hero__badge">
+            <small>New</small>
+            <strong>Blush</strong>
+            <small>Collection</small>
+          </div>
+        </div>
+
+        <div className="nail-hero__benefits">
+          {benefits.map((benefit) => (
+            <div className="nail-benefit" key={benefit.title}>
+              <span className="nail-benefit__icon" aria-hidden="true">
+                {benefit.icon}
+              </span>
+
+              <div>
+                <strong>{benefit.title}</strong>
+                <span>{benefit.text}</span>
+              </div>
             </div>
-            <h2>Luxury press-on sets</h2>
-            <p>Images, product text, prices, stock, cart and checkout.</p>
-            <Link to="/products">View collection →</Link>
-          </div>
-
-          <div className="floating-card admin-preview">
-            <span className="preview-label">Admin demo</span>
-            <strong>demo-admin</strong>
-            <p>Recruiters can review dashboard screens safely.</p>
-          </div>
+          ))}
         </div>
-      </div>
-
-      <div className="feature-grid">
-        <article>
-          <span>01</span>
-          <h3>Custom search flow</h3>
-          <p>
-            Search terms are matched to products saved in the shop, so users land
-            on local product pages instead of an external store.
-          </p>
-        </article>
-
-        <article>
-          <span>02</span>
-          <h3>Full e-commerce flow</h3>
-          <p>
-            Browse products, add to cart, fill checkout details and complete a
-            Stripe-hosted payment flow.
-          </p>
-        </article>
-
-        <article>
-          <span>03</span>
-          <h3>Admin dashboard</h3>
-          <p>
-            Includes product, order and customer screens so hiring managers can
-            see the management side of the project.
-          </p>
-        </article>
-      </div>
-
-      <section className="demo-callout">
-        <div>
-          <p className="eyebrow">Hiring manager access</p>
-          <h2>Admin demo included</h2>
-          <p>
-            The demo password is shown on the admin login screen. Destructive
-            actions are disabled in the UI to protect the live database.
-          </p>
-        </div>
-
-        <Link to="/admin" className="primary-link">
-          Open admin demo
-        </Link>
       </section>
-    </section>
+
+      {/* Keep the rest of your homepage sections here */}
+    </main>
   );
 };
 
