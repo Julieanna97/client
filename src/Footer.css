@@ -1,135 +1,151 @@
 .site-footer {
-  width: min(100% - 40px, 1340px);
-  margin: 34px auto 46px;
+  width: min(100% - 52px, 1380px);
+  margin: 0 auto 34px;
+  padding: 28px 0 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .footer-inner {
   display: grid;
-  grid-template-columns: 1.4fr 0.8fr 0.8fr 0.8fr 1.6fr;
-  gap: 34px;
-  padding: 42px;
-  border: 1px solid rgba(222, 171, 181, 0.55);
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 18px 50px rgba(93, 39, 55, 0.07);
+  padding: 30px 4px 22px;
+  grid-template-columns: 1.45fr 0.75fr 0.8fr 0.8fr 1.65fr;
+  gap: 38px;
+  border-top: 1px solid #e9d9d9;
 }
 
 .footer-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: #35212b;
-  text-decoration: none;
+  color: #3d2b30;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  letter-spacing: 0.18em;
 }
 
-.footer-brand:hover {
-  text-decoration: none;
-}
-
-.footer-brand span {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #f9aacb, #dc7b8c);
-  color: #fff;
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 900;
-}
-
-.footer-brand strong {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.35rem;
-}
-
-.footer-about p,
-.footer-newsletter p {
-  margin: 16px 0 0;
-  color: #806672;
+.footer-about p {
+  max-width: 240px;
+  margin: 14px 0 0;
+  color: #816d72;
+  font-size: 0.72rem;
   line-height: 1.7;
 }
 
 .footer-socials {
   display: flex;
-  gap: 12px;
-  margin-top: 18px;
-  color: #cf7587;
+  margin-top: 17px;
+  gap: 13px;
+}
+
+.footer-socials a {
+  color: #ad6673;
+  font-size: 0.9rem;
 }
 
 .footer-column h3,
 .footer-newsletter h3 {
-  margin: 0 0 14px;
-  color: #35212b;
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0.14em;
+  margin: 0 0 13px;
+  color: #453136;
+  font-family: var(--font-body);
+  font-size: 0.63rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .footer-column a,
 .footer-column span {
   display: block;
-  margin-top: 10px;
-  color: #806672;
-  text-decoration: none;
+  margin-top: 8px;
+  color: #806b70;
+  font-size: 0.67rem;
 }
 
-.footer-column a:hover {
-  color: #cf7587;
-  text-decoration: none;
-}
-
-.footer-newsletter div {
+.footer-newsletter-form {
   display: flex;
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  gap: 0;
   overflow: hidden;
-  border: 1px solid rgba(222, 171, 181, 0.62);
-  border-radius: 8px;
+  border: 1px solid #e4cfd1;
+  border-radius: 5px;
   background: #fff;
+  box-shadow: none;
 }
 
-.footer-newsletter input {
-  flex: 1;
+.footer-newsletter-form input {
   min-width: 0;
+  padding: 11px 12px;
   border: 0;
-  padding: 13px 14px;
-  outline: 0;
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 0.68rem;
 }
 
-.footer-newsletter button {
+.footer-newsletter-form input:focus {
   border: 0;
-  padding: 0 18px;
-  background: #db7f8f;
-  color: #fff;
-  font-weight: 900;
-  cursor: pointer;
+  box-shadow: none;
 }
 
-@media (max-width: 1050px) {
+.footer-newsletter-form button {
+  min-height: 40px;
+  padding: 0 20px;
+  border-radius: 0;
+  background: #d77a87;
+  box-shadow: none;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.payment-labels {
+  display: flex;
+  margin-top: 13px;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.payment-labels span {
+  padding: 4px 7px;
+  border: 1px solid #e8dddd;
+  border-radius: 3px;
+  background: #fff;
+  color: #5e4b50;
+  font-size: 0.52rem;
+  font-weight: 700;
+}
+
+.footer-copyright {
+  margin: 0;
+  color: #a08c91;
+  font-size: 0.61rem;
+  text-align: center;
+}
+
+@media (max-width: 950px) {
   .footer-inner {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 
+  .footer-about,
   .footer-newsletter {
     grid-column: 1 / -1;
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 560px) {
   .site-footer {
-    width: min(100% - 24px, 1340px);
+    width: min(100% - 24px, 1380px);
   }
 
   .footer-inner {
     grid-template-columns: 1fr;
-    padding: 28px;
   }
 
-  .footer-newsletter div {
-    flex-direction: column;
-  }
-
-  .footer-newsletter button {
-    min-height: 44px;
+  .footer-about,
+  .footer-newsletter {
+    grid-column: auto;
   }
 }
