@@ -33,7 +33,7 @@ const Product = () => {
       setProduct(res.data);
     } catch (err) {
       console.error("Failed to fetch product", err);
-      alert("Product not found.");
+      alert("This product could not be found.");
       navigate("/products");
     } finally {
       setLoading(false);
@@ -66,7 +66,7 @@ const Product = () => {
   return (
     <section className="product-detail-page">
       <Link to="/products" className="muted-link">
-        ← Back to products
+        ← Back to collection
       </Link>
 
       <div className="product-detail-grid">
@@ -89,7 +89,12 @@ const Product = () => {
 
           <div className="detail-price-row">
             <strong>{Number(product.price).toFixed(2)} SEK</strong>
-            <span>{product.stock} in stock</span>
+            <span>{product.stock > 0 ? `${product.stock} available` : "Sold out"}</span>
+          </div>
+
+          <div className="product-care-note">
+            <strong>Made for easy nail days</strong>
+            <span>Reusable with gentle removal and careful storage.</span>
           </div>
 
           <label htmlFor="quantity">Quantity</label>
@@ -103,7 +108,7 @@ const Product = () => {
           />
 
           <button onClick={addToCart} disabled={product.stock <= 0}>
-            {product.stock > 0 ? "Add to cart" : "Out of stock"}
+            {product.stock > 0 ? "Add to cart" : "Sold out"}
           </button>
         </div>
       </div>

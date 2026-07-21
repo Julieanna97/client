@@ -47,7 +47,7 @@ const Products = () => {
       setProducts(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Failed to fetch products", err);
-      setError("Could not load products from the backend.");
+      setError("We couldn't load the collection right now. Please refresh and try again.");
     } finally {
       setLoading(false);
     }
@@ -75,7 +75,7 @@ const Products = () => {
   if (loading) {
     return (
       <div className="products-page">
-        <p className="loading-state">Loading products...</p>
+        <p className="loading-state">Loading the collection...</p>
       </div>
     );
   }
@@ -83,22 +83,22 @@ const Products = () => {
   return (
     <div className="products-page">
       <section className="shop-hero">
-        <p className="eyebrow">Cloud database collection</p>
+        <p className="eyebrow">Nail Candi collection</p>
         <h1 className="products-title">Press-on nail sets</h1>
         <p>
-          Products are saved in the e-shop database and connected to search,
-          product pages, cart and checkout.
+          Explore glossy, reusable nail sets made for quick application and
+          instant polish.
         </p>
       </section>
 
       {error && <p className="no-products">{error}</p>}
 
       {!error && products.length === 0 && (
-        <p className="no-products">No products available.</p>
+        <p className="no-products">The collection is being restocked.</p>
       )}
 
       {products.length > 0 && (
-        <div className="category-filter">
+        <div className="category-filter" aria-label="Filter products by category">
           {categories.map((category) => (
             <button
               key={category}
@@ -115,19 +115,17 @@ const Products = () => {
       <div className="products-container">
         {visibleProducts.map((product) => (
           <article key={product.id} className="product-card">
-            <div className="product-image-wrap">
-              {product.image && (
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="product-image"
-                  onError={(event) => {
-                    event.currentTarget.onerror = null;
-                    event.currentTarget.src = "/no-image.png";
-                  }}
-                />
-              )}
-            </div>
+            <Link to={`/product/${product.id}`} className="product-image-wrap">
+              <img
+                src={product.image || "/no-image.png"}
+                alt={product.name}
+                className="product-image"
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = "/no-image.png";
+                }}
+              />
+            </Link>
 
             <div className="product-card-content">
               {product.category && (
@@ -142,7 +140,7 @@ const Products = () => {
 
               <div className="product-meta">
                 <span>{Number(product.price).toFixed(2)} SEK</span>
-                <span>{product.stock} in stock</span>
+                <span>{product.stock > 0 ? `${product.stock} left` : "Sold out"}</span>
               </div>
 
               <div className="product-actions">
@@ -155,7 +153,7 @@ const Products = () => {
                   onClick={() => addToCart(product)}
                   disabled={product.stock <= 0}
                 >
-                  {product.stock > 0 ? "Add to cart" : "Out of stock"}
+                  {product.stock > 0 ? "Add to cart" : "Sold out"}
                 </button>
               </div>
             </div>

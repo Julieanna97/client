@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../lib/api";
 import "../Products.css";
 
 interface Product {
-    id: number;
+  id: number;
   name: string;
   description: string;
   price: number | string;
@@ -19,18 +19,13 @@ interface CartItem extends Product {
   quantity: number;
 }
 
-const ALLOWED_SITE = "nailcandimd.com";
-
-const normalize = (value = "") => {
-  return value.toLowerCase().trim();
-};
+const normalize = (value = "") => value.toLowerCase().trim();
 
 const productMatchesQuery = (product: Product, query: string) => {
   const searchText = normalize(`
     ${product.name}
     ${product.description}
     ${product.category}
-    ${product.external_url || ""}
   `);
 
   const queryWords = normalize(query)
@@ -40,10 +35,6 @@ const productMatchesQuery = (product: Product, query: string) => {
   return queryWords.every((word) => searchText.includes(word));
 };
 
-const isImportedProduct = (product: Product) => {
-  return product.external_url?.includes(ALLOWED_SITE);
-};
-
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -51,31 +42,22 @@ const SearchResults = () => {
   const query = searchParams.get("q") || "";
 
   const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const filteredProducts = useMemo(() => {
+    if (!query.trim()) return [];
+    return products.filter((product) => productMatchesQuery(product, query));
+  }, [products, query]);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-
       const response = await axios.get(`${API_BASE_URL}/products`);
-
-      const allProducts: Product[] = Array.isArray(response.data)
-        ? response.data
-        : [];
-
-      const matched = allProducts.filter((product) => {
-        return isImportedProduct(product) && productMatchesQuery(product, query);
-      });
-
-      setProducts(allProducts);
-      setFilteredProducts(matched);
+      setProducts(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error("Could not fetch products:", err);
-      setError(
-        "Could not load products from your database. Check that the backend is running."
-      );
+      setError("Search is unavailable right now. Please try again in a moment.");
     } finally {
       setLoading(false);
     }
@@ -83,105 +65,93 @@ const SearchResults = () => {
 
   const addToCart = (product: Product) => {
     const cart: CartItem[] = JSON.parse(localStorage.getItem("cart") || "[]");
-
     const existing = cart.find((item) => item.id === product.id);
 
     if (existing) {
       existing.quantity += 1;
     } else {
-      cart.push({
-        ...product,
-        quantity: 1,
-      });
+      cart.push({ ...product, quantity: 1 });
     }
 
     localStorage.setItem("cart", JSON.stringify(cart));
-
-    alert(`${product.name} added to cart!`);
     navigate("/cart");
   };
 
   useEffect(() => {
     fetchProducts();
-  }, [query]);
+  }, []);
 
   return (
     <div className="products-page">
-      <h1 className="products-title">Search Results for: "{query}"</h1>
+      <section className="shop-hero search-hero">
+        <p className="eyebrow">Search the collection</p>
+        <h1 className="products-title">Results for “{query}”</h1>
+        <p>
+          Find press-on nail sets by colour, shape, finish or mood.
+        </p>
+      </section>
 
-      <p>
-        These results are products saved in your e-shop database and matched
-        from the custom Nail Candi search project.
-      </p>
-
-      <div style={{ marginBottom: "1rem" }}>
-        <Link to={`/search-import?q=${encodeURIComponent(query)}`}>
-          Import products from custom search →
-        </Link>
-      </div>
-
-      {loading && <p>Loading search results...</p>}
+      {loading && <p className="loading-state">Searching...</p>}
 
       {error && <p className="no-products">{error}</p>}
 
       {!loading && !error && filteredProducts.length === 0 && (
-        <div className="no-products">
-          <p>No saved products found for "{query}".</p>
+        <div className="no-products search-empty-card">
+          <h2>No matching sets found</h2>
           <p>
-            Use the import helper to add matching products from Nail Candi into
-            your database first.
+            Try another search like pink, duck, almond, luxury or gift card.
           </p>
+          <Link to="/products" className="primary-link">
+            Browse all nails
+          </Link>
         </div>
       )}
 
       <div className="products-container">
         {filteredProducts.map((product) => (
-          <div key={product.id} className="product-card">
-            {product.image && (
+          <article key={product.id} className="product-card">
+            <Link to={`/product/${product.id}`} className="product-image-wrap">
               <img
-                src={product.image}
+                src={product.image || "/no-image.png"}
                 alt={product.name}
                 className="product-image"
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = "/no-image.png";
+                }}
               />
-            )}
+            </Link>
 
-            <h2 className="product-title">{product.name}</h2>
+            <div className="product-card-content">
+              <p className="product-category">{product.category}</p>
+              <h2 className="product-title">{product.name}</h2>
+              <p className="product-description">
+                {product.description?.slice(0, 105)}
+                {product.description?.length > 105 ? "..." : ""}
+              </p>
 
-            <p>{product.description}</p>
+              <div className="product-meta">
+                <span>{Number(product.price).toFixed(2)} SEK</span>
+                <span>{product.stock > 0 ? `${product.stock} left` : "Sold out"}</span>
+              </div>
 
-            <p>
-              <strong>Category:</strong> {product.category}
-            </p>
+              <div className="product-actions">
+                <Link to={`/product/${product.id}`} className="secondary-link small">
+                  View details
+                </Link>
 
-            <p>
-              <strong>Price:</strong> {Number(product.price).toFixed(2)} SEK
-            </p>
-
-            <p>
-              <strong>Stock:</strong> {product.stock}
-            </p>
-
-            <div>
-              <Link to={`/product/${product.id}`}>View Product →</Link>
+                <button
+                  type="button"
+                  onClick={() => addToCart(product)}
+                  disabled={product.stock <= 0}
+                >
+                  {product.stock > 0 ? "Add to cart" : "Sold out"}
+                </button>
+              </div>
             </div>
-
-            <br />
-
-            <button
-              type="button"
-              onClick={() => addToCart(product)}
-              disabled={product.stock <= 0}
-            >
-              {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
-            </button>
-          </div>
+          </article>
         ))}
       </div>
-
-      <p style={{ marginTop: "2rem", fontSize: "0.9rem", opacity: 0.7 }}>
-        Total saved Nail Candi products in database:{" "}
-        {products.filter(isImportedProduct).length}
-      </p>
     </div>
   );
 };

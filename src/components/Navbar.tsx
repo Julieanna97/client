@@ -1,57 +1,64 @@
+import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChangeEvent, FormEvent, useState } from "react";
 import "../Navbar.css";
 
 const Navbar = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [query, setQuery] = useState("");
   const navigate = useNavigate();
 
-  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSearch = (e: FormEvent) => {
+    e.preventDefault();
 
-    const trimmedSearch = searchTerm.trim();
+    const trimmedQuery = query.trim();
 
-    if (trimmedSearch.length > 1) {
-      navigate(`/search?q=${encodeURIComponent(trimmedSearch)}`);
-      setSearchTerm("");
-    }
-  };
+    if (!trimmedQuery) return;
 
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
+    navigate(`/search?q=${encodeURIComponent(trimmedQuery)}`);
+    setQuery("");
   };
 
   return (
-    <nav className="navbar">
-      <div className="navbar-container">
-        <Link to="/" className="navbar-logo" aria-label="Go to homepage">
-          <span className="logo-mark">NC</span>
-          <span>
-            <strong>Nail Candi</strong>
-            <small>Search Shop</small>
-          </span>
-        </Link>
-
-        <form className="navbar-search" onSubmit={handleSearch}>
-          <input
-            type="text"
-            placeholder="Search duck, pink, almond..."
-            value={searchTerm}
-            onChange={handleInputChange}
-            aria-label="Search products"
-          />
-          <button type="submit">Search</button>
-        </form>
-
-        <div className="navbar-links">
-          <Link to="/products">Shop</Link>
-          <Link to="/cart">Cart</Link>
-          <Link to="/admin" className="admin-pill">
-            Admin demo
-          </Link>
-        </div>
+    <header className="site-header">
+      <div className="announcement-bar">
+        Free shipping on orders over 499 SEK 💕
       </div>
-    </nav>
+
+      <nav className="navbar">
+        <div className="navbar-inner">
+          <div className="navbar-left">
+            <Link to="/products">Shop</Link>
+            <Link to="/search?q=duck">Collections</Link>
+            <Link to="/search?q=pink">New arrivals</Link>
+          </div>
+
+          <Link to="/" className="navbar-brand">
+            <span className="brand-mark">NC</span>
+            <span>
+              <strong>Nail Candi</strong>
+              <small>Press-on nails</small>
+            </span>
+          </Link>
+
+          <div className="navbar-right">
+            <form onSubmit={handleSearch} className="navbar-search">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search"
+                aria-label="Search products"
+              />
+              <button type="submit">Search</button>
+            </form>
+
+            <Link to="/cart">Cart</Link>
+            <Link to="/admin" className="staff-link">
+              Staff
+            </Link>
+          </div>
+        </div>
+      </nav>
+    </header>
   );
 };
 

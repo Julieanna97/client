@@ -22,6 +22,17 @@ interface CustomerInfo {
   country: string;
 }
 
+const fieldLabels: Record<keyof CustomerInfo, string> = {
+  firstname: "First name",
+  lastname: "Last name",
+  email: "Email",
+  phone: "Phone",
+  street_address: "Street address",
+  postal_code: "Postal code",
+  city: "City",
+  country: "Country",
+};
+
 const Checkout = () => {
   const navigate = useNavigate();
 
@@ -98,7 +109,7 @@ const Checkout = () => {
     }
 
     if (Object.values(customerInfo).some((field) => field.trim() === "")) {
-      alert("Please fill out all customer fields.");
+      alert("Please fill out all delivery details.");
       return;
     }
 
@@ -141,9 +152,10 @@ const Checkout = () => {
 
   return (
     <section className="checkout-page">
-      <div>
+      <div className="checkout-header">
         <p className="eyebrow">Secure checkout</p>
         <h1>Complete your order</h1>
+        <p>Enter your details and continue to secure payment.</p>
       </div>
 
       <div className="checkout-grid">
@@ -155,7 +167,7 @@ const Checkout = () => {
               <div>
                 <strong>{item.name}</strong>
                 <p>
-                  {Number(item.price).toFixed(2)} SEK x {item.quantity}
+                  {Number(item.price).toFixed(2)} SEK × {item.quantity}
                 </p>
               </div>
 
@@ -164,6 +176,7 @@ const Checkout = () => {
                   type="number"
                   value={item.quantity}
                   min="1"
+                  aria-label={`Quantity for ${item.name}`}
                   onChange={(event) =>
                     updateQuantity(item.id, Number(event.target.value))
                   }
@@ -176,20 +189,24 @@ const Checkout = () => {
             </div>
           ))}
 
-          <h2>Total: {getTotal().toFixed(2)} SEK</h2>
+          <div className="checkout-total">
+            <span>Total</span>
+            <strong>{getTotal().toFixed(2)} SEK</strong>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <h2>Customer information</h2>
+        <form onSubmit={handleSubmit} className="checkout-form">
+          <h2>Delivery details</h2>
 
-          {Object.entries(customerInfo).map(([key, value]) => (
+          {(Object.keys(customerInfo) as Array<keyof CustomerInfo>).map((key) => (
             <div key={key}>
-              <label>{key.replace("_", " ")}</label>
+              <label htmlFor={key}>{fieldLabels[key]}</label>
 
               <input
-                type="text"
+                id={key}
+                type={key === "email" ? "email" : "text"}
                 name={key}
-                value={String(value)}
+                value={customerInfo[key]}
                 onChange={handleInputChange}
                 required
               />
@@ -197,7 +214,7 @@ const Checkout = () => {
           ))}
 
           <button type="submit" disabled={loading}>
-            {loading ? "Redirecting to Stripe..." : "Proceed to payment"}
+            {loading ? "Opening secure payment..." : "Proceed to payment"}
           </button>
         </form>
       </div>

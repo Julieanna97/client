@@ -59,9 +59,7 @@ const getRealUrl = (googleUrl = "") => {
 
 const getImage = (result: GoogleElementResult) => {
   const metatags =
-    result.richSnippet?.metatags ||
-    result.pagemap?.metatags?.[0] ||
-    {};
+    result.richSnippet?.metatags || result.pagemap?.metatags?.[0] || {};
 
   return (
     metatags.ogImage ||
@@ -80,8 +78,7 @@ const convertGoogleResult = (result: GoogleElementResult): SearchProduct => {
 
   return {
     title: result.titleNoFormatting || stripHtml(result.title || ""),
-    description:
-      result.contentNoFormatting || stripHtml(result.content || ""),
+    description: result.contentNoFormatting || stripHtml(result.content || ""),
     image: getImage(result),
     externalUrl: realUrl,
     displayLink: result.visibleUrl || "",
@@ -131,13 +128,10 @@ const SearchImportHelper = () => {
 
     try {
       await axios.post(`${API_BASE_URL}/products`, payload);
-
-      alert("Product added to your store database!");
+      alert("Product added to the catalog.");
     } catch (err) {
       console.error("Could not save product:", err);
-      alert(
-        "Could not save product. Make sure backend is running and external_url exists in products table."
-      );
+      alert("Could not save product. Please check the server connection.");
     }
   };
 
@@ -154,15 +148,11 @@ const SearchImportHelper = () => {
       _promos: unknown,
       rawResults: GoogleElementResult[]
     ) => {
-      console.log("Google search engine:", gname);
-      console.log("Search query:", searchQuery);
-      console.log("Raw Google results:", rawResults);
+      console.log("Supplier search:", gname, searchQuery);
 
       const convertedResults = (rawResults || [])
         .map(convertGoogleResult)
         .filter(isFromAllowedWebsite);
-
-      console.log("Converted Nail Candi results:", convertedResults);
 
       setResults(convertedResults);
       setLoading(false);
@@ -183,7 +173,7 @@ const SearchImportHelper = () => {
       const container = document.getElementById("google-cse-import-results");
 
       if (!container || !window.google?.search?.cse?.element) {
-        setError("Google search element could not be loaded.");
+        setError("The supplier finder could not be loaded.");
         setLoading(false);
         return;
       }
@@ -208,7 +198,7 @@ const SearchImportHelper = () => {
       if (element) {
         element.execute(query);
       } else {
-        setError("Google search element could not be created.");
+        setError("The supplier finder could not be created.");
         setLoading(false);
       }
     };
@@ -229,7 +219,7 @@ const SearchImportHelper = () => {
       setTimeout(renderAndSearch, 200);
     };
     script.onerror = () => {
-      setError("Could not load Google Programmable Search script.");
+      setError("The supplier finder could not be loaded.");
       setLoading(false);
     };
 
@@ -253,44 +243,23 @@ const SearchImportHelper = () => {
         `}
       </style>
 
-      <h1 className="products-title">Import Products for: "{query}"</h1>
+      <section className="shop-hero">
+        <p className="eyebrow">Studio tools</p>
+        <h1 className="products-title">Supplier product finder</h1>
+        <p>
+          Find supplier listings and save selected items into the shop catalog.
+        </p>
+      </section>
 
-      <div style={{ marginBottom: "1rem" }}>
-        <p>Try common Nail Candi searches:</p>
-
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          {[
-            "nails",
-            "press on nails",
-            "duck nails",
-            "almond nails",
-            "coffin nails",
-            "ballerina nails",
-            "hand painted nails",
-            "luxury nails",
-            "mystery set",
-            "gift card",
-          ].map((term) => (
-            <a
-              key={term}
-              href={`/search-import?q=${encodeURIComponent(term)}`}
-              style={{
-                padding: "0.4rem 0.7rem",
-                border: "1px solid #ddd",
-                borderRadius: "999px",
-                textDecoration: "none",
-              }}
-            >
+      <div className="quick-searches">
+        {["pink", "duck nails", "almond nails", "coffin nails", "luxury nails"].map(
+          (term) => (
+            <a key={term} href={`/admin/import?q=${encodeURIComponent(term)}`}>
               {term}
             </a>
-          ))}
-        </div>
+          )
+        )}
       </div>
-
-      <p>
-        These are results from your custom Google search engine. Add the ones
-        you want into your own e-shop database.
-      </p>
 
       <div
         id="google-cse-import-results"
@@ -304,48 +273,48 @@ const SearchImportHelper = () => {
         }}
       ></div>
 
-      {loading && <p>Loading import results...</p>}
+      {loading && <p className="loading-state">Finding products...</p>}
 
       {error && <p className="no-products">{error}</p>}
 
       {!loading && !error && results.length === 0 && (
-        <p className="no-products">No import results found.</p>
+        <p className="no-products">No supplier results found.</p>
       )}
 
       <div className="products-container">
         {results.map((product) => (
-          <div key={product.externalUrl} className="product-card">
-            {product.image && (
+          <article key={product.externalUrl} className="product-card">
+            <div className="product-image-wrap">
               <img
-                src={product.image}
+                src={product.image || "/no-image.png"}
                 alt={product.title}
                 className="product-image"
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = "/no-image.png";
+                }}
               />
-            )}
+            </div>
 
-            <h2 className="product-title">{product.title}</h2>
+            <div className="product-card-content">
+              <p className="product-category">Supplier listing</p>
+              <h2 className="product-title">{product.title}</h2>
+              <p className="product-description">{product.description}</p>
 
-            <p>{product.description}</p>
+              <a
+                href={product.externalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="muted-link"
+              >
+                View supplier page ↗
+              </a>
 
-            <p>
-              <strong>Source:</strong> {product.displayLink}
-            </p>
-
-            <a
-              href={product.externalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              View original source ↗
-            </a>
-
-            <br />
-            <br />
-
-            <button type="button" onClick={() => saveProductToStore(product)}>
-              Add to My Store
-            </button>
-          </div>
+              <button type="button" onClick={() => saveProductToStore(product)}>
+                Add to catalog
+              </button>
+            </div>
+          </article>
         ))}
       </div>
     </div>

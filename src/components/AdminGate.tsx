@@ -2,8 +2,8 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import "../Admin.css";
 
-const DEMO_PASSWORD = "demo-admin";
-const STORAGE_KEY = "portfolio_admin_demo_access";
+const STAFF_PASSWORD = "demo-admin";
+const STORAGE_KEY = "nail_candi_staff_access";
 
 const AdminGate = () => {
   const [password, setPassword] = useState("");
@@ -17,14 +17,14 @@ const AdminGate = () => {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (password.trim() === DEMO_PASSWORD) {
+    if (password.trim() === STAFF_PASSWORD) {
       localStorage.setItem(STORAGE_KEY, "true");
       setHasAccess(true);
       setError("");
       return;
     }
 
-    setError("Wrong demo password. Use: demo-admin");
+    setError("The password is incorrect. Please try again.");
   };
 
   const handleLogout = () => {
@@ -37,31 +37,26 @@ const AdminGate = () => {
     return (
       <section className="admin-login-shell">
         <div className="admin-login-card">
-          <p className="eyebrow">Portfolio admin demo</p>
-          <h1>Explore the e-commerce dashboard</h1>
+          <p className="eyebrow">Staff access</p>
+          <h1>Nail Candi studio</h1>
           <p>
-            This admin area is included so recruiters can review the full shop
-            workflow: products, orders, customers, and management screens.
+            Sign in to view catalog, customer and order information for the
+            boutique.
           </p>
 
-          <div className="demo-credentials">
-            <span>Demo password</span>
-            <strong>{DEMO_PASSWORD}</strong>
-          </div>
-
           <form onSubmit={handleSubmit} className="demo-login-form">
-            <label htmlFor="admin-password">Enter demo password</label>
+            <label htmlFor="admin-password">Password</label>
             <input
               id="admin-password"
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="demo-admin"
+              placeholder="Enter password"
             />
 
             {error && <p className="form-error">{error}</p>}
 
-            <button type="submit">Open admin demo</button>
+            <button type="submit">Enter studio</button>
           </form>
 
           <Link to="/products" className="muted-link">
@@ -76,15 +71,15 @@ const AdminGate = () => {
     <section className="admin-demo-shell">
       <div className="demo-admin-banner">
         <div>
-          <strong>Demo Admin Mode</strong>
+          <strong>View-only studio access</strong>
           <p>
-            Public portfolio demo. Destructive actions are disabled in the UI so
-            the live database stays safe.
+            Catalog and order data can be reviewed here. Editing controls are
+            locked on the public storefront.
           </p>
         </div>
 
         <button type="button" className="secondary-button" onClick={handleLogout}>
-          Lock admin
+          Lock studio
         </button>
       </div>
 
