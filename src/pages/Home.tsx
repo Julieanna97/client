@@ -1,4 +1,6 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import {
   FiArrowRight,
   FiAward,
@@ -7,65 +9,29 @@ import {
   FiShield,
   FiShoppingBag,
 } from "react-icons/fi";
+import { API_BASE_URL } from "../lib/api";
 import "../Home.css";
 
-const categories = [
-  { label: "All sets", link: "/products" },
-  { label: "Best sellers", link: "/search?q=best seller" },
-  { label: "Y2K collection", link: "/search?q=y2k" },
-  { label: "Glitter", link: "/search?q=glitter" },
-  { label: "French", link: "/search?q=french" },
-  { label: "Nude", link: "/search?q=nude" },
-  { label: "3D design", link: "/search?q=3d" },
-];
+interface Product {
+  id: number;
+  name: string;
+  description?: string;
+  price: number | string;
+  stock: number;
+  image?: string;
+  category?: string;
+  external_url?: string | null;
+}
 
-const featuredSets = [
-  {
-    title: "Blush Aura",
-    price: "149 SEK",
-    reviewCount: 245,
-    tag: "Best seller",
-    image:
-      "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=88",
-    link: "/search?q=blush",
-  },
-  {
-    title: "Crystal Coquette",
-    price: "179 SEK",
-    reviewCount: 109,
-    tag: "New",
-    image:
-      "https://images.unsplash.com/photo-1610992015732-2449b76344bc?auto=format&fit=crop&w=800&q=88",
-    link: "/search?q=crystal",
-  },
-  {
-    title: "Sakura Baby",
-    price: "159 SEK",
-    reviewCount: 312,
-    tag: "",
-    image:
-      "https://images.unsplash.com/photo-1607779097040-26e80aa78e66?auto=format&fit=crop&w=800&q=88",
-    link: "/search?q=sakura",
-  },
-  {
-    title: "Galactic Star",
-    price: "169 SEK",
-    reviewCount: 156,
-    tag: "",
-    image:
-      "https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=800&q=88",
-    link: "/search?q=galactic",
-  },
-  {
-    title: "Honey Glaze",
-    price: "149 SEK",
-    reviewCount: 201,
-    tag: "",
-    image:
-      "https://images.unsplash.com/photo-1604902396830-aca29e19b067?auto=format&fit=crop&w=800&q=88",
-    link: "/search?q=honey",
-  },
-];
+const formatPrice = (value: number | string) => {
+  const amount = Number(value);
+
+  if (!Number.isFinite(amount)) {
+    return "Price unavailable";
+  }
+
+  return `${amount.toFixed(2)} SEK`;
+};
 
 const perks = [
   {
@@ -112,6 +78,80 @@ const testimonials = [
 ];
 
 const Home = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchProducts = async () => {
+      try {
+        setProductsLoading(true);
+        setProductsError("");
+
+        const response = await axios.get(`${API_BASE_URL}/products`);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setProducts(Array.isArray(response.data) ? response.data : []);
+      } catch (error) {
+        console.error("Could not load featured products:", error);
+
+        if (isMounted) {
+          setProducts([]);
+          setProductsError(
+            "The featured collection could not be loaded right now.",
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setProductsLoading(false);
+        }
+      }
+    };
+
+    void fetchProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const featuredProducts = useMemo(() => {
+    const availableProducts = products.filter(
+      (product) => Number(product.stock) > 0,
+    );
+
+    const productsToDisplay =
+      availableProducts.length > 0 ? availableProducts : products;
+
+    return productsToDisplay.slice(0, 5);
+  }, [products]);
+
+  const categoryLinks = useMemo(() => {
+    const uniqueCategories = Array.from(
+      new Set(
+        products
+          .map((product) => product.category?.trim())
+          .filter((category): category is string => Boolean(category)),
+      ),
+    );
+
+    return [
+      {
+        label: "All sets",
+        link: "/products",
+      },
+      ...uniqueCategories.slice(0, 6).map((category) => ({
+        label: category,
+        link: `/search?q=${encodeURIComponent(category)}`,
+      })),
+    ];
+  }, [products]);
+
   return (
     <main className="home-page">
       <section className="home-hero">
@@ -171,9 +211,9 @@ const Home = () => {
 
       <div className="category-row">
         <nav className="category-strip" aria-label="Product categories">
-          {categories.map((category, index) => (
+          {categoryLinks.map((category, index) => (
             <Link
-              key={category.label}
+              key={`${category.label}-${category.link}`}
               to={category.link}
               className={index === 0 ? "active" : ""}
             >
@@ -190,65 +230,133 @@ const Home = () => {
 
       <section className="featured-section">
         <div className="section-heading">
-          <h2>
-            Featured Sets <span>✣</span>
-          </h2>
+          <h2>Featured Sets</h2>
         </div>
 
         <div className="featured-grid">
-          {featuredSets.map((set) => (
-            <article className="featured-card" key={set.title}>
-              <div className="featured-image-wrap">
-                <Link to={set.link} aria-label={`View ${set.title}`}>
-                  <img src={set.image} alt={set.title} />
-                </Link>
+          {productsLoading &&
+            Array.from({ length: 5 }).map((_, index) => (
+              <article
+                className="featured-card featured-card-skeleton"
+                key={`featured-loading-${index}`}
+                aria-hidden="true"
+              >
+                <div className="featured-image-wrap" />
 
-                {set.tag && <span className="product-tag">{set.tag}</span>}
-
-                <button
-                  type="button"
-                  className="favourite-button"
-                  aria-label={`Add ${set.title} to favourites`}
-                >
-                  <FiHeart />
-                </button>
-              </div>
-
-              <div className="featured-info">
-                <div>
-                  <Link to={set.link}>
-                    <h3>{set.title}</h3>
-                  </Link>
-                  <p>{set.price}</p>
+                <div className="featured-skeleton-content">
+                  <span />
+                  <span />
+                  <span />
                 </div>
+              </article>
+            ))}
 
-                <Link
-                  to={set.link}
-                  className="product-cart-button"
-                  aria-label={`View ${set.title}`}
-                >
-                  <FiShoppingBag />
+          {!productsLoading &&
+            featuredProducts.map((product, index) => {
+              const stock = Math.max(0, Number(product.stock) || 0);
+              const productUrl = `/product/${product.id}`;
+
+              return (
+                <article className="featured-card" key={product.id}>
+                  <div className="featured-image-wrap">
+                    <Link
+                      to={productUrl}
+                      aria-label={`View ${product.name}`}
+                    >
+                      <img
+                        src={product.image || "/no-image.png"}
+                        alt={product.name}
+                        onError={(event) => {
+                          event.currentTarget.onerror = null;
+                          event.currentTarget.src = "/no-image.png";
+                        }}
+                      />
+                    </Link>
+
+                    <span className="product-tag">
+                      {index === 0
+                        ? "Featured"
+                        : product.category || "Press-on nails"}
+                    </span>
+
+                    <button
+                      type="button"
+                      className="favourite-button"
+                      aria-label={`Add ${product.name} to favourites`}
+                    >
+                      <FiHeart />
+                    </button>
+                  </div>
+
+                  <div className="featured-info">
+                    <div>
+                      <Link to={productUrl}>
+                        <h3>{product.name}</h3>
+                      </Link>
+
+                      <p>{formatPrice(product.price)}</p>
+                    </div>
+
+                    <Link
+                      to={productUrl}
+                      className="product-cart-button"
+                      aria-label={`View ${product.name}`}
+                    >
+                      <FiShoppingBag />
+                    </Link>
+                  </div>
+
+                  <div
+                    className={`featured-stock ${
+                      stock <= 0 ? "is-sold-out" : ""
+                    }`}
+                  >
+                    <span>{stock > 0 ? "In stock" : "Sold out"}</span>
+
+                    {stock > 0 && <small>{stock} available</small>}
+                  </div>
+                </article>
+              );
+            })}
+
+          {!productsLoading && productsError && (
+            <div className="featured-empty">
+              <h3>Featured products are unavailable</h3>
+              <p>{productsError}</p>
+
+              <Link to="/products">
+                Browse the collection
+                <FiArrowRight />
+              </Link>
+            </div>
+          )}
+
+          {!productsLoading &&
+            !productsError &&
+            featuredProducts.length === 0 && (
+              <div className="featured-empty">
+                <h3>No featured products yet</h3>
+                <p>
+                  Add products in the admin area and they will appear here.
+                </p>
+
+                <Link to="/products">
+                  Browse the collection
+                  <FiArrowRight />
                 </Link>
               </div>
-
-              <div className="product-rating">
-                <span aria-label="5 out of 5 stars">★★★★★</span>
-                <small>({set.reviewCount})</small>
-              </div>
-            </article>
-          ))}
+            )}
         </div>
       </section>
 
       <section className="testimonials-section">
-        <h2>
-          Loved by Thousands <span>♡</span>
-        </h2>
+        <h2>Loved by Thousands</h2>
 
         <div className="testimonial-grid">
           {testimonials.map((testimonial) => (
             <article key={testimonial.name}>
               <div className="testimonial-stars">★★★★★</div>
+
               <blockquote>“{testimonial.quote}”</blockquote>
 
               <div className="testimonial-author">

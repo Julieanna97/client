@@ -10,7 +10,6 @@ import Cart from "../pages/Cart";
 import Checkout from "../pages/Checkout";
 import OrderConfirmation from "../pages/OrderConfirmation";
 import SearchResults from "../pages/SearchResults";
-import SearchImportHelper from "../pages/SearchImportHelper";
 import NotFound from "../pages/NotFound";
 
 // Admin Pages
@@ -36,7 +35,6 @@ const router = createBrowserRouter([
       { path: "checkout", element: <Checkout /> },
       { path: "order-confirmation", element: <OrderConfirmation /> },
       { path: "search", element: <SearchResults /> },
-      { path: "search-import", element: <SearchImportHelper /> },
 
       {
         path: "admin",

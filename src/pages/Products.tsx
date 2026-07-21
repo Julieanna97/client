@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  FiArrowRight,
+  FiCheck,
+  FiShoppingBag,
+} from "react-icons/fi";
 import "../Products.css";
 import { API_BASE_URL } from "../lib/api";
 
@@ -19,6 +24,28 @@ interface CartItem extends Product {
   quantity: number;
 }
 
+const cleanText = (value = "") => value.replace(/\s+/g, " ").trim();
+
+const createExcerpt = (value: string, length = 94) => {
+  const cleaned = cleanText(value);
+
+  if (cleaned.length <= length) {
+    return cleaned;
+  }
+
+  return `${cleaned.slice(0, length).trim()}…`;
+};
+
+const formatPrice = (value: number | string) => {
+  const price = Number(value);
+
+  if (!Number.isFinite(price)) {
+    return "0.00 SEK";
+  }
+
+  return `${price.toFixed(2)} SEK`;
+};
+
 const Products = () => {
   const navigate = useNavigate();
 
@@ -29,138 +56,254 @@ const Products = () => {
 
   const categories = useMemo(() => {
     const productCategories = products
-      .map((product) => product.category)
+      .map((product) => product.category?.trim())
       .filter((category): category is string => Boolean(category));
 
     return ["All", ...Array.from(new Set(productCategories))];
   }, [products]);
 
   const visibleProducts = useMemo(() => {
-    if (activeCategory === "All") return products;
+    if (activeCategory === "All") {
+      return products;
+    }
 
-    return products.filter((product) => product.category === activeCategory);
+    return products.filter(
+      (product) => product.category?.trim() === activeCategory,
+    );
   }, [activeCategory, products]);
 
-  const fetchProducts = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/products`);
-      setProducts(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      console.error("Failed to fetch products", err);
-      setError("We couldn't load the collection right now. Please refresh and try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addToCart = (product: Product) => {
-    const cart: CartItem[] = JSON.parse(localStorage.getItem("cart") || "[]");
-
-    const existing = cart.find((item) => item.id === product.id);
-
-    if (existing) {
-      existing.quantity += 1;
-    } else {
-      cart.push({ ...product, quantity: 1 });
-    }
-
-    localStorage.setItem("cart", JSON.stringify(cart));
-    navigate("/cart");
-  };
-
   useEffect(() => {
-    fetchProducts();
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await axios.get(`${API_BASE_URL}/products`);
+
+        setProducts(Array.isArray(response.data) ? response.data : []);
+      } catch (requestError) {
+        console.error("Failed to fetch products", requestError);
+        setError(
+          "We couldn't load the collection right now. Please refresh and try again.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchProducts();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="products-page">
-        <p className="loading-state">Loading the collection...</p>
-      </div>
-    );
-  }
+  const addToCart = (product: Product) => {
+    try {
+      const storedCart = localStorage.getItem("cart");
+      const cart: CartItem[] = storedCart ? JSON.parse(storedCart) : [];
+
+      const existingItem = cart.find((item) => item.id === product.id);
+
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        cart.push({ ...product, quantity: 1 });
+      }
+
+      localStorage.setItem("cart", JSON.stringify(cart));
+      window.dispatchEvent(new Event("cart-updated"));
+      navigate("/cart");
+    } catch (storageError) {
+      console.error("Could not update cart", storageError);
+    }
+  };
 
   return (
-    <div className="products-page">
-      <section className="shop-hero">
-        <p className="eyebrow">Nail Candi collection</p>
-        <h1 className="products-title">Press-on nail sets</h1>
-        <p>
-          Explore glossy, reusable nail sets made for quick application and
-          instant polish.
-        </p>
+    <main className="catalog-page">
+      <section className="catalog-hero">
+        <div className="catalog-hero-copy">
+          <p className="catalog-eyebrow">The Nailé collection</p>
+
+          <h1>
+            Find your
+            <br />
+            perfect set.
+          </h1>
+
+          <p>
+            Salon-inspired press-on nails designed for effortless application,
+            comfortable wear and a polished finish.
+          </p>
+
+          <div className="catalog-hero-benefits">
+            <span>
+              <FiCheck />
+              Reusable
+            </span>
+
+            <span>
+              <FiCheck />
+              Easy application
+            </span>
+
+            <span>
+              <FiCheck />
+              Salon-quality finish
+            </span>
+          </div>
+        </div>
+
+        <div className="catalog-hero-art" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+
+          <div className="catalog-hero-stamp">
+            <small>Luxury</small>
+            <strong>NAILÉ</strong>
+            <small>Press-ons</small>
+          </div>
+        </div>
       </section>
 
-      {error && <p className="no-products">{error}</p>}
+      {loading && (
+        <section className="catalog-loading" aria-live="polite">
+          <div className="catalog-loading-heading" />
 
-      {!error && products.length === 0 && (
-        <p className="no-products">The collection is being restocked.</p>
+          <div className="catalog-skeleton-grid">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div className="catalog-skeleton-card" key={index}>
+                <span />
+                <i />
+                <i />
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
-      {products.length > 0 && (
-        <div className="category-filter" aria-label="Filter products by category">
-          {categories.map((category) => (
-            <button
-              key={category}
-              type="button"
-              className={category === activeCategory ? "active" : ""}
-              onClick={() => setActiveCategory(category)}
+      {!loading && error && (
+        <section className="catalog-message-card">
+          <h2>Something went wrong</h2>
+          <p>{error}</p>
+        </section>
+      )}
+
+      {!loading && !error && products.length === 0 && (
+        <section className="catalog-message-card">
+          <h2>The collection is being restocked</h2>
+          <p>Please check back soon for new press-on nail sets.</p>
+        </section>
+      )}
+
+      {!loading && !error && products.length > 0 && (
+        <>
+          <section className="catalog-toolbar">
+            <div
+              className="catalog-filters"
+              aria-label="Filter products by category"
             >
-              {category}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="products-container">
-        {visibleProducts.map((product) => (
-          <article key={product.id} className="product-card">
-            <Link to={`/product/${product.id}`} className="product-image-wrap">
-              <img
-                src={product.image || "/no-image.png"}
-                alt={product.name}
-                className="product-image"
-                onError={(event) => {
-                  event.currentTarget.onerror = null;
-                  event.currentTarget.src = "/no-image.png";
-                }}
-              />
-            </Link>
-
-            <div className="product-card-content">
-              {product.category && (
-                <p className="product-category">{product.category}</p>
-              )}
-
-              <h2 className="product-title">{product.name}</h2>
-              <p className="product-description">
-                {product.description?.slice(0, 105)}
-                {product.description?.length > 105 ? "..." : ""}
-              </p>
-
-              <div className="product-meta">
-                <span>{Number(product.price).toFixed(2)} SEK</span>
-                <span>{product.stock > 0 ? `${product.stock} left` : "Sold out"}</span>
-              </div>
-
-              <div className="product-actions">
-                <Link to={`/product/${product.id}`} className="secondary-link small">
-                  View details
-                </Link>
-
+              {categories.map((category) => (
                 <button
+                  key={category}
                   type="button"
-                  onClick={() => addToCart(product)}
-                  disabled={product.stock <= 0}
+                  aria-pressed={activeCategory === category}
+                  className={
+                    activeCategory === category ? "is-active" : undefined
+                  }
+                  onClick={() => setActiveCategory(category)}
                 >
-                  {product.stock > 0 ? "Add to cart" : "Sold out"}
+                  {category}
                 </button>
-              </div>
+              ))}
             </div>
-          </article>
-        ))}
-      </div>
-    </div>
+
+            <p>
+              {visibleProducts.length}{" "}
+              {visibleProducts.length === 1 ? "product" : "products"}
+            </p>
+          </section>
+
+          <section className="catalog-grid">
+            {visibleProducts.map((product) => {
+              const stock = Number(product.stock) || 0;
+
+              return (
+                <article className="catalog-card" key={product.id}>
+                  <Link
+                    to={`/product/${product.id}`}
+                    className="catalog-card-image-link"
+                    aria-label={`View ${product.name}`}
+                  >
+                    <img
+                      src={product.image || "/no-image.png"}
+                      alt={product.name}
+                      className="catalog-card-image"
+                      onError={(event) => {
+                        event.currentTarget.onerror = null;
+                        event.currentTarget.src = "/no-image.png";
+                      }}
+                    />
+
+                    {product.category && (
+                      <span className="catalog-card-category">
+                        {product.category}
+                      </span>
+                    )}
+
+                    {stock > 0 && stock <= 3 && (
+                      <span className="catalog-low-stock">
+                        Only {stock} left
+                      </span>
+                    )}
+                  </Link>
+
+                  <div className="catalog-card-content">
+                    <Link
+                      to={`/product/${product.id}`}
+                      className="catalog-card-title"
+                    >
+                      {product.name}
+                    </Link>
+
+                    <p className="catalog-card-description">
+                      {createExcerpt(product.description)}
+                    </p>
+
+                    <div className="catalog-card-meta">
+                      <strong>{formatPrice(product.price)}</strong>
+
+                      <span className={stock <= 0 ? "is-sold-out" : undefined}>
+                        {stock > 0 ? "In stock" : "Sold out"}
+                      </span>
+                    </div>
+
+                    <div className="catalog-card-actions">
+                      <Link
+                        to={`/product/${product.id}`}
+                        className="catalog-view-button"
+                      >
+                        View set
+                        <FiArrowRight />
+                      </Link>
+
+                      <button
+                        type="button"
+                        className="catalog-cart-button"
+                        aria-label={`Add ${product.name} to cart`}
+                        disabled={stock <= 0}
+                        onClick={() => addToCart(product)}
+                      >
+                        <FiShoppingBag />
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </section>
+        </>
+      )}
+    </main>
   );
 };
 
