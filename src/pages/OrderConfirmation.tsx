@@ -1,11 +1,20 @@
-import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import {
+  Link,
+  useLocation,
+} from "react-router-dom";
 import axios from "axios";
+
 import "../Cart.css";
 import { API_BASE_URL } from "../lib/api";
 
 interface OrderItem {
   id: number;
+  product_id?: number;
   product_name: string;
   quantity: number;
   unit_price: number | string;
@@ -27,114 +36,340 @@ interface Order {
   order_items: OrderItem[];
 }
 
+const numberValue = (
+  value: number | string | undefined,
+): number => {
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const formatSek = (value: number): string =>
+  `${value.toFixed(2)} SEK`;
+
 const OrderConfirmation = () => {
   const location = useLocation();
-  const navigate = useNavigate();
 
-  const [order, setOrder] = useState<Order | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [order, setOrder] =
+    useState<Order | null>(null);
 
-  const sessionId = new URLSearchParams(location.search).get("session_id");
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  const sessionId = new URLSearchParams(
+    location.search,
+  ).get("session_id");
 
   useEffect(() => {
-    if (!sessionId) {
-      alert("No session ID found!");
-      navigate("/");
-      return;
-    }
+    let isMounted = true;
 
     const fetchOrder = async () => {
-      try {
-        const response = await axios.get(
-          `${API_BASE_URL}/orders/payment/${sessionId}`
+      if (!sessionId) {
+        setError(
+          "The payment session could not be found.",
         );
 
-        const orderData: Order = response.data;
+        setLoading(false);
+        return;
+      }
 
-        await axios.patch(`${API_BASE_URL}/orders/${orderData.id}`, {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response =
+          await axios.get<Order>(
+            `${API_BASE_URL}/orders/payment/${sessionId}`,
+          );
+
+        const orderData = response.data;
+
+        await axios.patch(
+          `${API_BASE_URL}/orders/${orderData.id}`,
+          {
+            payment_status: "Paid",
+            order_status: "Received",
+            payment_id: sessionId,
+          },
+        );
+
+        if (!isMounted) {
+          return;
+        }
+
+        setOrder({
+          ...orderData,
           payment_status: "Paid",
           order_status: "Received",
-          payment_id: sessionId,
         });
 
-        setOrder(orderData);
-
         localStorage.removeItem("cart");
-        localStorage.removeItem("customerInfo");
-      } catch (error) {
-        console.error("Failed to fetch order", error);
-        alert("Order not found or something went wrong.");
-        navigate("/");
+        localStorage.removeItem(
+          "customerInfo",
+        );
+
+        window.dispatchEvent(
+          new Event("cart-updated"),
+        );
+      } catch (requestError) {
+        console.error(
+          "Failed to load order confirmation:",
+          requestError,
+        );
+
+        if (isMounted) {
+          setError(
+            "We could not load your order details. Your payment may still have been completed.",
+          );
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchOrder();
-  }, [sessionId, navigate]);
+    void fetchOrder();
 
-  if (loading) return <p className="loading-state">Loading order confirmation...</p>;
-  if (!order) return null;
+    return () => {
+      isMounted = false;
+    };
+  }, [sessionId]);
+
+  const totals = useMemo(() => {
+    if (!order) {
+      return {
+        subtotal: 0,
+        shipping: 0,
+        total: 0,
+      };
+    }
+
+    const subtotal = order.order_items.reduce(
+      (sum, item) =>
+        sum +
+        numberValue(item.unit_price) *
+          numberValue(item.quantity),
+      0,
+    );
+
+    const total = numberValue(
+      order.total_price,
+    );
+
+    /*
+     * The backend stores:
+     * total_price = product subtotal + shipping.
+     *
+     * order_items contains only product lines, so the
+     * difference is the shipping charge.
+     */
+    const shipping = Math.max(
+      total - subtotal,
+      0,
+    );
+
+    return {
+      subtotal,
+      shipping,
+      total,
+    };
+  }, [order]);
+
+  const hasFreeShipping =
+    totals.shipping < 0.005;
+
+  if (loading) {
+    return (
+      <main className="order-confirmation-page">
+        <section className="order-card order-confirmation-loading">
+          <p>
+            Loading your order confirmation…
+          </p>
+        </section>
+      </main>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <main className="order-confirmation-page">
+        <section className="order-card order-confirmation-error">
+          <p className="eyebrow">
+            Order confirmation
+          </p>
+
+          <h1>
+            We couldn’t display your order.
+          </h1>
+
+          <p>
+            {error ||
+              "The requested order could not be found."}
+          </p>
+
+          <div className="hero-actions">
+            <Link
+              to="/"
+              className="primary-link"
+            >
+              Return to the shop
+            </Link>
+
+            <Link
+              to="/admin/orders"
+              className="secondary-link"
+            >
+              View orders
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
-    <section className="order-confirmation-page">
-      <div>
-        <p className="eyebrow">Payment complete</p>
-        <h1>Thank you for your purchase!</h1>
-        <p>Your order has been received and saved in the admin dashboard.</p>
-      </div>
+    <main className="order-confirmation-page">
+      <header className="order-confirmation-header">
+        <p className="eyebrow">
+          Payment complete
+        </p>
 
-      <div className="checkout-grid">
-        <div className="order-card">
+        <h1>
+          Thank you for your purchase!
+        </h1>
+
+        <p>
+          Your order has been received and
+          saved in the admin dashboard.
+        </p>
+      </header>
+
+      <div className="checkout-grid order-confirmation-grid">
+        <section className="order-card">
           <h2>Customer information</h2>
 
-          <p>
-            <strong>Name:</strong> {order.customer_firstname}{" "}
-            {order.customer_lastname}
-          </p>
+          <div className="customer-information-list">
+            <p>
+              <strong>Name:</strong>{" "}
+              {order.customer_firstname}{" "}
+              {order.customer_lastname}
+            </p>
 
-          <p>
-            <strong>Email:</strong> {order.customer_email}
-          </p>
+            <p>
+              <strong>Email:</strong>{" "}
+              {order.customer_email}
+            </p>
 
-          <p>
-            <strong>Phone:</strong> {order.customer_phone}
-          </p>
+            <p>
+              <strong>Phone:</strong>{" "}
+              {order.customer_phone}
+            </p>
 
-          <p>
-            <strong>Address:</strong> {order.customer_street_address},{" "}
-            {order.customer_postal_code} {order.customer_city},{" "}
-            {order.customer_country}
-          </p>
-        </div>
+            <p>
+              <strong>Address:</strong>{" "}
+              {order.customer_street_address},{" "}
+              {order.customer_postal_code}{" "}
+              {order.customer_city},{" "}
+              {order.customer_country}
+            </p>
+          </div>
+        </section>
 
-        <div className="order-card">
+        <section className="order-card">
           <h2>Order summary</h2>
 
-          {order.order_items.map((item) => (
-            <div key={item.id} className="checkout-item">
-              <span>
-                {item.product_name} x {item.quantity}
-              </span>
+          <div className="order-confirmation-items">
+            {order.order_items.map(
+              (item) => {
+                const lineTotal =
+                  numberValue(
+                    item.unit_price,
+                  ) *
+                  numberValue(
+                    item.quantity,
+                  );
+
+                return (
+                  <div
+                    className="checkout-item"
+                    key={item.id}
+                  >
+                    <span>
+                      {item.product_name} ×{" "}
+                      {item.quantity}
+                    </span>
+
+                    <strong>
+                      {formatSek(lineTotal)}
+                    </strong>
+                  </div>
+                );
+              },
+            )}
+          </div>
+
+          <div className="order-summary-totals">
+            <div className="order-summary-row">
+              <span>Subtotal</span>
+
               <strong>
-                {(Number(item.unit_price) * item.quantity).toFixed(2)} SEK
+                {formatSek(
+                  totals.subtotal,
+                )}
               </strong>
             </div>
-          ))}
 
-          <h2>Total: {Number(order.total_price).toFixed(2)} SEK</h2>
-        </div>
+            <div className="order-summary-row">
+              <span>
+                Standard shipping
+              </span>
+
+              <strong
+                className={
+                  hasFreeShipping
+                    ? "order-summary-free"
+                    : undefined
+                }
+              >
+                {hasFreeShipping
+                  ? "Free"
+                  : formatSek(
+                      totals.shipping,
+                    )}
+              </strong>
+            </div>
+
+            <div className="order-summary-row order-summary-total">
+              <span>Total</span>
+
+              <strong>
+                {formatSek(totals.total)}
+              </strong>
+            </div>
+          </div>
+        </section>
       </div>
 
       <div className="hero-actions">
-        <Link to="/products" className="primary-link">
+        <Link
+          to="/products"
+          className="primary-link"
+        >
           Continue shopping
         </Link>
-        <Link to="/admin/orders" className="secondary-link">
+
+        <Link
+          to="/admin/orders"
+          className="secondary-link"
+        >
           View in admin demo
         </Link>
       </div>
-    </section>
+    </main>
   );
 };
 

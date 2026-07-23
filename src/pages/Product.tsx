@@ -4,7 +4,6 @@ import axios from "axios";
 import {
   FiArrowLeft,
   FiCheck,
-  FiExternalLink,
   FiMinus,
   FiPlus,
   FiRefreshCw,
@@ -289,17 +288,6 @@ const Product = () => {
             </button>
           </div>
 
-          {product.external_url && (
-            <a
-              href={product.external_url}
-              target="_blank"
-              rel="noreferrer"
-              className="pdp-external-link"
-            >
-              View original product information
-              <FiExternalLink />
-            </a>
-          )}
 
           <div className="pdp-service-list">
             <div>

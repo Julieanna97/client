@@ -16,6 +16,50 @@ interface SidebarProps {
   onLogout: () => void;
 }
 
+const navigation = [
+  {
+    label: "Dashboard",
+    path: "/admin",
+    icon: FiGrid,
+    end: true,
+  },
+  {
+    label: "Orders",
+    path: "/admin/orders",
+    icon: FiShoppingBag,
+  },
+  {
+    label: "Customers",
+    path: "/admin/customers",
+    icon: FiUsers,
+  },
+  {
+    label: "Products",
+    path: "/admin/products",
+    icon: FiPackage,
+  },
+  {
+    label: "Inventory",
+    path: "/admin/inventory",
+    icon: FiArchive,
+  },
+  {
+    label: "Collections",
+    path: "/admin/collections",
+    icon: FiTag,
+  },
+  {
+    label: "Reviews",
+    path: "/admin/reviews",
+    icon: FiStar,
+  },
+  {
+    label: "Analytics",
+    path: "/admin/analytics",
+    icon: FiBarChart2,
+  },
+];
+
 const Sidebar = ({ onLogout }: SidebarProps) => {
   return (
     <aside className="admin-sidebar">
@@ -24,70 +68,44 @@ const Sidebar = ({ onLogout }: SidebarProps) => {
         <span>Admin</span>
       </div>
 
-      <nav className="admin-sidebar-nav">
-        <NavLink
-          to="/admin"
-          end
-          className={({ isActive }) => (isActive ? "active" : "")}
-        >
-          <FiGrid />
-          <span>Dashboard</span>
-        </NavLink>
+      <nav
+        className="admin-sidebar-nav"
+        aria-label="Admin navigation"
+      >
+        {navigation.map((item) => {
+          const Icon = item.icon;
 
-        <NavLink
-          to="/admin/orders"
-          className={({ isActive }) => (isActive ? "active" : "")}
-        >
-          <FiShoppingBag />
-          <span>Orders</span>
-          <small>24</small>
-        </NavLink>
-
-        <NavLink
-          to="/admin/customers"
-          className={({ isActive }) => (isActive ? "active" : "")}
-        >
-          <FiUsers />
-          <span>Customers</span>
-        </NavLink>
-
-        <NavLink
-          to="/admin/products"
-          className={({ isActive }) => (isActive ? "active" : "")}
-        >
-          <FiPackage />
-          <span>Products</span>
-        </NavLink>
-
-        <span className="admin-nav-placeholder">
-          <FiArchive />
-          <span>Inventory</span>
-        </span>
-
-        <span className="admin-nav-placeholder">
-          <FiTag />
-          <span>Collections</span>
-        </span>
-
-        <span className="admin-nav-placeholder">
-          <FiStar />
-          <span>Reviews</span>
-        </span>
-
-        <span className="admin-nav-placeholder">
-          <FiBarChart2 />
-          <span>Analytics</span>
-        </span>
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              end={item.end}
+              className={({ isActive }) =>
+                isActive ? "active" : ""
+              }
+            >
+              <Icon aria-hidden="true" />
+              <span>{item.label}</span>
+            </NavLink>
+          );
+        })}
       </nav>
 
       <div className="admin-sidebar-bottom">
         <div className="admin-help-card">
           <FiHelpCircle />
-          <strong>Need help?</strong>
-          <p>Review the store documentation and support notes.</p>
+          <strong>Portfolio admin</strong>
+          <p>
+            Explore live store data and interactive
+            management views.
+          </p>
         </div>
 
-        <button type="button" className="admin-logout" onClick={onLogout}>
+        <button
+          type="button"
+          className="admin-logout"
+          onClick={onLogout}
+        >
           <FiLogOut />
           Lock studio
         </button>

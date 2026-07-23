@@ -882,15 +882,6 @@
   background: #c76877;
 }
 
-.pdp-external-link {
-  display: inline-flex;
-  margin-top: 15px;
-  align-items: center;
-  gap: 7px;
-  color: #a75d69;
-  font-size: 0.65rem;
-  font-weight: 700;
-}
 
 .pdp-service-list {
   display: grid;
