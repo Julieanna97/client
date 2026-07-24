@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../../lib/api";
+import { getShippingFee } from "../../lib/checkout";
 import "../../Admin.css";
 
 interface OrderItem {
@@ -12,7 +13,7 @@ interface OrderItem {
   unit_price: number | string;
 }
 
-interface OrderDetails {
+interface OrderDetailsData {
   id: number;
   customer_id: number;
   customer_firstname: string;
@@ -24,8 +25,8 @@ interface OrderDetails {
   customer_city: string;
   customer_country: string;
   total_price: number | string;
-  payment_status: string;
-  order_status: string;
+  payment_status: string | null;
+  order_status: string | null;
   order_items: OrderItem[];
 }
 
@@ -33,32 +34,68 @@ const OrderDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [order, setOrder] = useState<OrderDetails | null>(null);
+  const [order, setOrder] = useState<OrderDetailsData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchOrder = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/orders/${id}`);
-      setOrder(res.data);
-    } catch (err) {
-      console.error("Failed to fetch order", err);
-      alert("Order not found.");
-      navigate("/admin/orders");
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const fetchOrder = async () => {
+      if (!id) {
+        setLoading(false);
+        navigate("/admin/orders", { replace: true });
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        const response = await axios.get<OrderDetailsData>(
+          `${API_BASE_URL}/orders/${id}`,
+        );
+
+        setOrder(response.data);
+      } catch (error) {
+        console.error("Failed to fetch order", error);
+        alert("Order not found.");
+        navigate("/admin/orders", { replace: true });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchOrder();
+  }, [id, navigate]);
 
   const showReadOnlyMessage = () => {
     alert("Demo admin is read-only so order item changes are disabled.");
   };
 
-  useEffect(() => {
-    fetchOrder();
-  }, [id, navigate]);
+  if (loading) {
+    return (
+      <p className="loading-state">
+        Loading order details...
+      </p>
+    );
+  }
 
-  if (loading) return <p className="loading-state">Loading order details...</p>;
-  if (!order) return null;
+  if (!order) {
+    return (
+      <p className="loading-state">
+        Order not found.
+      </p>
+    );
+  }
+
+  const subtotal = order.order_items.reduce((sum, item) => {
+    const quantity = Number(item.quantity);
+    const unitPrice = Number(item.unit_price);
+
+    return sum + quantity * unitPrice;
+  }, 0);
+
+  // Shipping costs 49 SEK below 499 SEK.
+  // Orders at or above 499 SEK receive free shipping.
+  const shipping = getShippingFee(subtotal);
+  const total = subtotal + shipping;
 
   return (
     <div className="admin-panel">
@@ -66,8 +103,11 @@ const OrderDetails = () => {
         <Link to="/admin/orders" className="muted-link">
           ← Back to orders
         </Link>
+
         <p className="eyebrow">Admin / order details</p>
+
         <h1>Order #{order.id}</h1>
+
         <p>
           Detailed view of the customer, payment status and order items created
           through the checkout flow.
@@ -112,8 +152,13 @@ const OrderDetails = () => {
             {order.order_items.map((item) => (
               <tr key={item.id}>
                 <td>{item.product_name}</td>
+
                 <td>{item.quantity}</td>
-                <td>{Number(item.unit_price).toFixed(2)} SEK</td>
+
+                <td>
+                  {Number(item.unit_price).toFixed(2)} SEK
+                </td>
+
                 <td>
                   <button
                     type="button"
@@ -136,12 +181,27 @@ const OrderDetails = () => {
       </div>
 
       <div className="order-card">
-        <h2>Total: {Number(order.total_price).toFixed(2)} SEK</h2>
         <p>
-          <strong>Payment:</strong> {order.payment_status}
+          <strong>Subtotal:</strong> {subtotal.toFixed(2)} SEK
         </p>
+
         <p>
-          <strong>Status:</strong> {order.order_status}
+          <strong>Shipping:</strong>{" "}
+          {shipping === 0
+            ? "FREE"
+            : `${shipping.toFixed(2)} SEK`}
+        </p>
+
+        <h2>Total: {total.toFixed(2)} SEK</h2>
+
+        <p>
+          <strong>Payment:</strong>{" "}
+          {order.payment_status || "Not recorded"}
+        </p>
+
+        <p>
+          <strong>Status:</strong>{" "}
+          {order.order_status || "Not recorded"}
         </p>
       </div>
     </div>
